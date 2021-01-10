@@ -2,15 +2,26 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-int main () {
+#include "include/Person.hpp"
+
+int main (int argc, char * argv []){
+  Person p = new Person(1, "Sheldon");
+  printf(p.getName());
+
+
+	return 1;
+}
+
+
+  /*
 	int n_valores = 0,
 		n_threads = 0,
 		i = 0;
 
-	/*int* args = (int *) malloc(sizeof(int));
+	int* args = (int *) malloc(sizeof(int));
 	pthread_t* threads = (pthread_t *) malloc(sizeof(pthread_t));
 
-	pthread_mutex_init(&lock, NULL);*/
+	pthread_mutex_init(&lock, NULL);
 
 	printf("Digite a quantidade de números a processar: ");
 	scanf("%d", &n_valores);
@@ -31,6 +42,4 @@ int main () {
 
 	pthread_mutex_destroy(&lock);
 
-	printf("O número total de números primos encontrados foi: %d\n", n_primos);
-	return 1;
-}
+	printf("O número total de números primos encontrados foi: %d\n", n_primos);*/
