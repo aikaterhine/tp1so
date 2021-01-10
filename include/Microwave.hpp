@@ -4,7 +4,7 @@
 #include <string>
 #include <stdarg.h>
 
-#include "include/Person.hpp"
+#include "../src/Person.cpp"
 
 using namespace std;
 namespace Microwave {

@@ -1,30 +1,40 @@
 #include <iostream>
-#include "include/Person.hpp"
+#include<string>
 
-#include "include/List.hpp"
+//#include "../include/Person.hpp"
+#include "../include/List.hpp"
 
-using namespace Person;
+using namespace std;
+//using namespace PersonNS;
 
-Person(int userId, string userName){
-  this.name = userName;
-  this.id = userId;
-}
+class Person {
+  private:
+    int _id;
+    string _name;
 
-Person(){
-}
+  public:
 
-void setName(string userName){
-	this.name = userName;
-}
+    Person(int userId, string userName){
+      _name = userName;
+      _id = userId;
+    }
 
-void setId(int userId){
-	this.id = userId;
-}
+    Person(){
+    }
 
-string getName(){
-	return this.name;
-}
+    void setName(string userName){
+      _name = userName;
+    }
 
-int getId(){
-	return this.id;
-}
+    void setId(int userId){
+    	_id = userId;
+    }
+
+    string getName(){
+    	return _name;
+    }
+
+    int getId(){
+    	return _id;
+    }
+};

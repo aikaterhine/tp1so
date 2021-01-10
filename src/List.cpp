@@ -1,5 +1,7 @@
-#include "include/List.hpp"
+#include "../include/List.hpp"
 
+
+/*
 int main() {
 
 
@@ -62,7 +64,7 @@ int main() {
      	printf("\nopcao invalida");
      } system("cls");windows Clrscr();
    }
-   
+
   return 0;
 }
 
@@ -178,9 +180,9 @@ if(p == NULL){
 
 }}
 
-
+*/
+/*
 void excluirEspecifico(struct listaSimples *inicio,int v){
- /* funciona com os itens entre primeiro e ultimo */
  struct no *p,*ini,*excluir;
  p=inicio->ini;
  ini = p;
@@ -213,3 +215,4 @@ void excluirEspecifico(struct listaSimples *inicio,int v){
  		printf("\xDC");
  		i++;
 	 }while(i<23);
+*/

@@ -6,12 +6,12 @@
 
 using namespace std;
 
-namespace Person {
+namespace PersonNS {
 
   class Person {
     private:
-      int id;
-      string name;
+      int _id;
+      string _name;
 
     public:
       void setName(string);
