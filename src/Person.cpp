@@ -1,40 +1,39 @@
-#include <iostream>
-#include<string>
+#include "../include/Person.hpp"
 
-//#include "../include/Person.hpp"
-#include "../include/List.hpp"
+Person::Person(int userId, string userName){
+  _name = userName;
+  _id = userId;
+}
 
-using namespace std;
-//using namespace PersonNS;
+Person::Person(){
+}
 
-class Person {
-  private:
-    int _id;
-    string _name;
+void Person::setName(string userName){
+  _name = userName;
+}
 
-  public:
+void Person::setId(int userId){
+	_id = userId;
+}
 
-    Person(int userId, string userName){
-      _name = userName;
-      _id = userId;
-    }
+string Person::getName(){
+	return _name;
+}
 
-    Person(){
-    }
+int Person::getId(){
+	return _id;
+}
 
-    void setName(string userName){
-      _name = userName;
-    }
+/*
+void cook_something(Person){
 
-    void setId(int userId){
-    	_id = userId;
-    }
+}
 
-    string getName(){
-    	return _name;
-    }
+void eat(Person){
 
-    int getId(){
-    	return _id;
-    }
-};
+}
+
+void sleep(int){
+
+}
+*/

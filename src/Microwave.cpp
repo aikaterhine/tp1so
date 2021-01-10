@@ -1,30 +1,17 @@
-#include <iostream>
-#include <thread>
-#include <mutex>
+#include "../include/Microwave.hpp"
 
-#include "../src/Person.cpp"
+Microwave::Microwave(){
+}
+/*
+void Microwave::wait(Person p){
 
-using namespace std;
+}
 
-class Microwave {
-  private:
-    mutex m; //you can use std::lock_guard if you want to be exception safe
-    int i = 0;
+void Microwave::release(Person p){
 
-  public:
+}
 
-    Microwave(){
-    }
+void Microwave::check(){
 
-    void wait(Person p){
-
-    }
-
-    void release(Person p){
-
-    }
-
-    void check(){
-
-    }
-};
+}
+*/

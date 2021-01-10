@@ -2,11 +2,8 @@
 #define PERSON_HPP
 
 #include <string>
-#include <stdarg.h>
 
 using namespace std;
-
-namespace PersonNS {
 
   class Person {
     private:
@@ -21,11 +18,11 @@ namespace PersonNS {
     	Person(int, string);
       Person();
 
+/*
       void cook_something(Person);
       void eat(Person);
       void sleep(int);
+*/
   };
-
-}
 
 #endif // PERSON_HPP

@@ -1,25 +1,27 @@
 #ifndef MICROWAVE_HPP
 #define MICROWAVE_HPP
 
-#include <string>
-#include <stdarg.h>
+//#include "../src/Person.cpp"
 
-#include "../src/Person.cpp"
+#include <string>
+
+#include <iostream>
+#include <mutex>
+#include <pthread.h>
 
 using namespace std;
-namespace Microwave {
 
-  class Microwave {
-    private:
-      int id;
-      string name;
+class Microwave
+{
+	private:
 
-    public:
-      void wait(Person);
-      void release(Person);
-      void check();
-  };
+	public:
+		Microwave();
+		/*
+    void wait(Person);
+    void release(Person);
+    void check();
+		*/
+};
 
-}
-
-#endif // MICROWAVE_HPP
+#endif
