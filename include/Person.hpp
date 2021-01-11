@@ -15,7 +15,7 @@ using namespace std;
       string _name;
 
     public:
-      void setName(string);
+      void setName(int);
       void setId(int);
       string getName();
       int getId();
