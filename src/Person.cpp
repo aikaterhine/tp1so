@@ -24,16 +24,20 @@ int Person::getId(){
 	return _id;
 }
 
-/*
-void cook_something(Person){
+void cook_something(Person p){
+}
+
+void eat(Person p){
+  srand48(time(NULL));
+  int number = drand48 () * 10;
+  cout << number << endl;
+  // tem q pausar a thread por esse tempo
+}
+
+void sleep(int time){
 
 }
 
-void eat(Person){
+void work(Person p){
 
 }
-
-void sleep(int){
-
-}
-*/

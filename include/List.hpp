@@ -2,27 +2,23 @@
 #define LIST_HPP
 
 #include <string>
-#include <stdarg.h>
+#include <iostream>
 
 using namespace std;
-namespace List {
 
   class List {
+
     private:
-      struct no{int valor; struct no *pro;};
-      struct listaSimples{ struct no *ini; };
+      struct Node;
 
     public:
-      void mostrar(struct listaSimples *inicio);
-      void incluir(struct listaSimples *inicio, int v);
-      void excluirInicio(struct listaSimples *inicio);
-      void excluirEspecifico(struct listaSimples *inicio, int v);
-      void pesquisar(struct listaSimples *inicio, int v);
-      void alterar(struct listaSimples *inicio, int va, int vn);
-      void excluirFim(struct listaSimples *inicio);
-      void linhas();
+      List();
+      struct Node *insertInEmpty(struct Node*, int);
+      struct Node *insertAtBegin(struct Node*, int);
+      struct Node *insertAtEnd(struct Node*, int);
+      struct Node *insertAfter(struct Node*, int, int);
+      void traverseList(struct Node*);
+      void deleteNode(Node**, int);
   };
-
-}
 
 #endif // LIST_HPP

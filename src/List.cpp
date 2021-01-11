@@ -1,218 +1,152 @@
 #include "../include/List.hpp"
 
+struct Node {
+   int data;
+   struct Node *next;
+};
 
-/*
-int main() {
+//insert a new node in an empty list
+struct Node *insertInEmpty(struct Node *last, int new_data)
+{
+   // if last is not null then list is not empty, so return
+   if (last != NULL)
+   return last;
 
+   // allocate memory for node
+   struct Node *temp = new Node;
 
-  struct listaSimples *adm_lista;
-  adm_lista = (struct listaSimples*)malloc(sizeof(struct listaSimples));
-  adm_lista->ini = NULL;
-  int op = -2;
-  int v,vn;
+   // Assign the data.
+   temp -> data = new_data;
+   last = temp;
 
-  linhas();printf("\xDC");printf("\xDC");
-  printf("\n\xDB ---------MENU-------- \xDB\n");
-  printf("\xDB 1- Adicionar          \xDB\n\xDB 2- Excluir o primeiro \xDB\n\xDB 3- Mostra lista       \xDB\n");
-  printf("\xDB 4- Alterar valor      \xDB\n\xDB 5- Pesquisar valor    \xDB\n\xDB 6- Excluir especifico \xDB\n");
-  printf("\xDB 7- Excluir o ultimo   \xDB\n\xDB 0- Sair               \xDB\n\xDB");
-  linhas();printf("\xDB\n\n");
+   // Create the link.
+   last->next = last;
 
-  while (op!=0){
+   return last;
+}
+//insert new node at the beginning of the list
+struct Node *insertAtBegin(struct Node *last, int new_data){
+   //if list is empty then add the node by calling insertInEmpty
+   if (last == NULL)
+   return insertInEmpty(last, new_data);
 
-    printf("Opcao:");
-    scanf("%d",&op);
+   //else create a new node
+   struct Node *temp = new Node;
 
-    switch(op){
+   //set new data to node
+   temp -> data = new_data;
+   temp -> next = last -> next;
+   last -> next = temp;
 
-     case 1:
-    	 	printf("Informe o valor que sera incluso na lista: ");
-    	 	scanf("%d",&v);
-    	 	incluir(adm_lista, v);
-     	break;
-     case 2:
-     		excluirInicio(adm_lista);
-     	break;
-     case 3:
-     		mostrar(adm_lista);
-     	break;
-     case 4:
-     		printf("Informe o valor que sera alterado na lista: ");
-     		scanf("%d",&v);
-     		printf("Informe o novo valor: ");
-     		scanf("%d",&vn);
-     		alterar(adm_lista, v, vn);
-     	break;
-     case 5:
-    		printf("Informe o valor que sera pesquisado na lista: ");
-    		scanf("%d",&v);
-    		pesquisar(adm_lista,v);
-    	 break;
-     case 6:
-    		printf("Informe o valor que sera excluido na lista: ");
-    		scanf("%d",&v);
-    		excluirEspecifico(adm_lista,v);
-    	 break;
-     case 7:
-     		excluirFim(adm_lista);
-    	break;
+   return last;
+}
+//insert new node at the end of the list
+struct Node *insertAtEnd(struct Node *last, int new_data){
+   //if list is empty then add the node by calling insertInEmpty
+   if (last == NULL)
+   return insertInEmpty(last, new_data);
 
-     case 0:
-      break;
+   //else create a new node
+   struct Node *temp = new Node;
 
-     default:
-     	printf("\nopcao invalida");
-     } system("cls");windows Clrscr();
-   }
+   //assign data to new node
+   temp -> data = new_data;
+   temp -> next = last -> next;
+   last -> next = temp;
+   last = temp;
 
-  return 0;
+   return last;
 }
 
+//insert a new node in between the nodes
+struct Node *insertAfter(struct Node *last, int new_data, int after_item){
+   //return null if list is empty
+   if (last == NULL)
+   return NULL;
 
-void incluir(struct listaSimples *inicio,int v){
-struct no *novo,*p;
-novo = (struct no*)malloc(sizeof(struct no));
-novo->valor = v;
-novo->pro = NULL;
+   struct Node *temp, *p;
+   p = last -> next;
+   do
+   {
+      if (p ->data == after_item)
+      {
+         temp = new Node;
+         temp -> data = new_data;
+         temp -> next = p -> next;
+         p -> next = temp;
 
- if(inicio->ini == NULL){
-	 inicio->ini = novo;
-	 novo->pro= inicio->ini;
- }else{
-	 p = inicio->ini;
-	 while(p->pro != inicio->ini){
-	 	p=p->pro;
-	 }
-	 p->pro = novo;
-	 novo->pro = inicio->ini;
- }}
+         if (p == last)
+         last = temp;
+         return last;
+       }
+   p = p -> next;
+ } while(p != last -> next);
 
-void mostrar(struct listaSimples *inicio){
-struct no *p;
-p=inicio->ini;
-printf("\nAtual estado da lista\n");
-if(p == NULL){
-	printf("Lista vazia\n");
-}else if(p->pro == p){
-	printf("%d\n",p->valor);
-}else{
-	printf("%d\n",p->valor);
-	p = p->pro;
-	while (p != inicio->ini ){
-	printf("%d\n",p->valor);
-	p = p->pro;
-	 }
-	 }}
+   cout << "The node with data "<<after_item << " is not present in the list." << endl;
+   return last;
 
-void pesquisar(struct listaSimples *inicio,int v){
-struct no *p;
-p=inicio->ini;
+}
+//traverse the circular linked list
+void traverseList(struct Node *last) {
+   struct Node *p;
 
-if(p == NULL){
-	printf("Lista vazia\n");
- }else if(p->valor == v){
- printf("valor : %d\n",p->valor);
-  }else{
-   p = p->pro;
-    while ( p != inicio->ini){
-	if(p->valor == v){
-	printf("valor : %d\n",p->valor);
-	 break; }
-	 p = p->pro; } }}
+   // If list is empty, return.
+   if (last == NULL) {
+      cout << "Circular linked List is empty." << endl;
+      return;
+      }
+p = last -> next; // Point to the first Node in the list.
 
-void alterar(struct listaSimples *inicio,int va,int vn){
-struct no *p;
-p=inicio->ini;
+// Traverse the list starting from first node until first node is visited again
 
-if(p == NULL){
-	printf("Lista vazia\n");
- }else if(p->valor == va){
-	p->valor = vn;
-}else{
-	p = p->pro;
-	while ( p != inicio->ini){
-		if(p->valor == va){
-			p->valor = vn;
-			break;
-		}
-	p = p->pro; }
-}}
+do {
+      cout << p -> data << "==>";
+      p = p -> next;
+      } while(p != last->next);
+   if(p == last->next)
+   cout<<p->data;
+   cout<<"\n\n";
+   }
 
+//delete the node from the list
+void deleteNode(Node** head, int key)
+{
+   // If linked list is empty retun
+   if (*head == NULL)
+   return;
 
-void excluirInicio(struct listaSimples *inicio){
-struct no *p,*ini,*novoIni;
-p=inicio->ini;
-ini = p;
- if(p == NULL){
-	printf("Lista vazia\n");
- }else if(p->pro == p){
-	free(ini);
-	inicio->ini = NULL;
- }else{
-	 p = p->pro;
-	 while (p->pro != inicio->ini ){
-	 	p = p->pro;
-	}
-	 novoIni = ini->pro;
-	 inicio->ini = novoIni;
-	 p->pro = inicio->ini;
-	 free(ini);
-}}
+   // If the list contains only a single node,delete that node; list is empty
+   if((*head)->data==key && (*head)->next==*head) {
+      free(*head);
+      *head=NULL;
+      }
+Node *last=*head,*d;
 
-void excluirFim(struct listaSimples *inicio){
-struct no *p,*ini,*novoFim;
-p=inicio->ini;
-ini = p;
-if(p == NULL){
-	printf("Lista vazia\n");
- }else if(p->pro == p){
-	free(ini);
-	inicio->ini = NULL;
- }else{
-	 p = p->pro;
-	 while (p->pro->pro != inicio->ini ){
-	 	p = p->pro;
-	}
-	 novoFim = p;
-	 p = p->pro ;
-	 novoFim->pro = inicio->ini ;
-	 free(p);
+// If key is the head
+if((*head)->data==key) {
+   while(last->next!=*head) // Find the last node of the list
+   last=last->next;
 
-}}
+   // point last node to next of head or second node of the list
+   last->next=(*head)->next;
+   free(*head);
+   *head=last->next;
+   }
 
-*/
-/*
-void excluirEspecifico(struct listaSimples *inicio,int v){
- struct no *p,*ini,*excluir;
- p=inicio->ini;
- ini = p;
- if(p == NULL){
-	printf("Lista vazia\n");
- }else if(p->pro == p && p->valor == v){
-	 free(ini);
-	 inicio->ini = NULL;
- }else{
-	 p = p->pro;
-	 while (p->pro != inicio->ini ){
-		 if(p->valor == v){
-		 excluir = p;
-		 break;
-		 }
-		 p = p->pro;
-		}
-	 p=ini;
-	 while (p->pro != excluir ){
-	 	p = p->pro;
-		}
-	 p->pro = excluir->pro;
-	  free(excluir);
- }}
-
-
- void linhas(){
- 	int i=0;
- 	do{
- 		printf("\xDC");
- 		i++;
-	 }while(i<23);
-*/
+// end of list is reached or node to be deleted not there in the list
+while(last->next!=*head&&last->next->data!=key) {
+   last=last->next;
+}
+// node to be deleted is found, so free the memory and display the list
+if(last->next->data==key) {
+      d=last->next;
+      last->next=d->next;
+      cout<<"The node with data "<<key<<" deleted from the list"<<endl;
+      free(d);
+      cout<<endl;
+      cout<<"Circular linked list after deleting "<<key<<" is as follows:"<<endl;
+      traverseList(last);
+      }
+   else
+   cout<<"The node with data "<< key << " not found in the list"<<endl;
+   }

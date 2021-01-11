@@ -2,6 +2,10 @@
 #define PERSON_HPP
 
 #include <string>
+#include <stdlib.h>
+#include <iostream>
+#include <time.h>
+#include <stdio.h>
 
 using namespace std;
 
@@ -18,11 +22,11 @@ using namespace std;
     	Person(int, string);
       Person();
 
-/*
       void cook_something(Person);
       void eat(Person);
+      void work(Person);
       void sleep(int);
-*/
+
   };
 
 #endif // PERSON_HPP
