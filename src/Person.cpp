@@ -8,40 +8,41 @@ Person::Person(int userId, string userName){
 Person::Person(){
 }
 
-void Person::setName(int userId){
-  switch(userId){
-    case 0:
-      _name = "Sheldon";
-      break;
-    case 1:
-      _name = "Amy";
-      break;
-    case 2:
-      _name = "Howard";
-      break;
-    case 3:
-      _name = "Bernadette";
-      break;
-    case 4:
-      _name = "Leonard";
-      break;
-    case 5:
-      _name = "Penny";
-      break;
-    case 6:
-      _name = "Stuart";
-      break;
-    case 7:
-      _name = "Kripke";
-      break;
-    case 8:
-      _name = "Raj";
-      break;
-  }
+void Person::setName(string username){
+  _name = username;
 }
 
 void Person::setId(int userId){
 	_id = userId;
+  switch(userId){
+    case 0:
+      setName("Sheldon");
+      break;
+    case 1:
+      setName("Amy");
+      break;
+    case 2:
+      setName("Howard");
+      break;
+    case 3:
+      setName("Bernadette");
+      break;
+    case 4:
+      setName("Leonard");
+      break;
+    case 5:
+      setName("Penny");
+      break;
+    case 6:
+      setName("Stuart");
+      break;
+    case 7:
+      setName("Kripke");
+      break;
+    case 8:
+      setName("Raj");
+      break;
+  }
 }
 
 string Person::getName(){

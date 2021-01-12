@@ -2,6 +2,8 @@
 
 int thread_count;
 
+using namespace std;
+
 void *Hello(void* rank){
     long my_rank = (long) rank;
     Person p;

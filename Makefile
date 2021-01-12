@@ -1,15 +1,14 @@
 
 TARGET = app
 
-SRCS  = $(shell find ./src     -type f -name *.cpp)
-HEADS = $(shell find ./include -type f -name *.hpp)
+SRCS  = $(shell find . -type f -name '*.cpp')
+HEADS = $(shell find . -type f -name '*.hpp')
 OBJS = $(SRCS:.cpp=.o)
 DEPS = Makefile.depend
 
 INCLUDES = -I./include
 CXXFLAGS = -O2 -Wall $(INCLUDES)
 LDFLAGS = -lm
-
 
 all: $(TARGET)
 
