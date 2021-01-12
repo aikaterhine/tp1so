@@ -7,3 +7,6 @@
 #include <pthread.h>
 #include <mutex>
 #include <unistd.h>
+#include <errno.h>
+#include <string.h> 
+#include <unistd.h>

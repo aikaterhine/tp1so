@@ -1,5 +1,5 @@
 
-TARGET = app
+TARGET = main
 
 SRCS  = $(shell find . -type f -name '*.cpp')
 HEADS = $(shell find . -type f -name '*.hpp')
