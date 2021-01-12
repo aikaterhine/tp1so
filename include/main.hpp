@@ -1,6 +1,5 @@
 #include "../include/Microwave.hpp"
 #include "../include/Person.hpp"
-#include "../src/List.cpp"
 
 #include <stdio.h>
 #include <iostream>

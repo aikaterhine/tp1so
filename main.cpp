@@ -8,7 +8,6 @@ void *Hello(void* rank){
     long my_rank = (long) rank;
     Person p;
     p.setId(my_rank);
-    p.setName(my_rank);
 
     cout << "\n" << p.getName() << "\n" << endl;
 

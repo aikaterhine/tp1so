@@ -1,4 +1,4 @@
-
+/*
 // #pragma once
 #define _CRT_SECURE_NO_WARNINGS 1
 #define _WINSOCK_DEPRECATED_NO_WARNINGS 1
@@ -149,3 +149,4 @@ void *thread( void *vargp ) {
 // //	system( "pause" );
 // }
 // // --- Fim do Exemplo 4 ---
+*/
