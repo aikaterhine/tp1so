@@ -3,6 +3,14 @@
 
  #define NTHREADS 2
 
+ /*
+
+1 - quer usar o forno
+2 - esquentar algo no forno
+3 -comer
+4 - voltar ao trabalho
+ */
+
 int threads_repeat;
 
 Microwave forno;
@@ -12,11 +20,12 @@ using namespace std;
 void *Hello (void* rank){
     long my_rank = (long) rank;
     Person p;
+    Microwave m;
     p.setId(my_rank);
 
     cout << "\nHi from thread " << my_rank << " of " << NTHREADS << "\n" << endl;
-
-    sleep(10);
+    
+    //sleep(10);
 
     return NULL;
 }
@@ -48,17 +57,6 @@ void *raj(void* rank){
 }
 
 int main (int argc, char * argv []){
-  /*struct Node *last = NULL;
-
-  last = insertInEmpty(last, 30);
-  last = insertAtBegin(last, 20);
-  last = insertAtBegin(last, 10);
-  last = insertAtEnd(last, 40);
-  last = insertAtEnd(last, 60);
-  last = insertAfter(last, 50,40 );
-  cout<<"The circular linked list created is as follows:"<<endl;
-  traverseList(last);
-  deleteNode(&last,10);*/
 
     int error;
     long thread;

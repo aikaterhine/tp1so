@@ -37,7 +37,7 @@ void Microwave::release(Person p){
 }
 
 void Microwave::check(){
-  //cout << p.getName() << " vai comer." << "\n";
+  //cout << p.getName() << " vai comer" << "\n";
 }
 
 /*
