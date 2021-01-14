@@ -3,9 +3,11 @@
 Person::Person(int userId, string userName){
   _name = userName;
   _id = userId;
+  _quer_usar = false;
 }
 
 Person::Person(){
+  _quer_usar = false;
 }
 
 void Person::setName(string username){
@@ -19,7 +21,7 @@ void Person::setId(int userId){
       setName("Sheldon");
       break;
     case 1:
-      setName("Amy");
+      setName("Howard");//Amy
       break;
     case 2:
       setName("Howard");
@@ -45,6 +47,10 @@ void Person::setId(int userId){
   }
 }
 
+void Person::setQuer_usar(bool quer_usar){
+  _quer_usar = quer_usar; 
+}
+
 string Person::getName(){
 	return _name;
 }
@@ -53,20 +59,23 @@ int Person::getId(){
 	return _id;
 }
 
-void cook_something(Person p){
+bool Person::getQuer_usar(){
+  return _quer_usar;
 }
 
-void eat(Person p){
+void Person::cook_something(){
+  cout << _name << " começa a esquentar algo" << "\n";
+  sleep(1);
+}
+
+void Person::eat(){
   srand48(time(NULL));
-  int number = drand48 () * 10;
-  cout << number << endl;
-  // tem q pausar a thread por esse tempo
+  int number = 1 + (drand48 () * 2);
+  sleep(number);
 }
 
-void sleep(int time){
-
-}
-
-void work(Person p){
-
+void Person::work(){
+  int number = 3 + (drand48 () * 3);
+  cout << _name << " voltou para o trabalho" << "\n";
+  sleep(number);
 }

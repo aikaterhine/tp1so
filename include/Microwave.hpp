@@ -38,6 +38,10 @@ class Microwave {
 		*/
 
 	public:
+		pthread_mutex_t lock_forno;
+		pthread_mutex_t lock_p[2];
+		pthread_cond_t  cond_p[2];
+
 		Microwave();
 
     void wait(Person);

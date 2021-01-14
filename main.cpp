@@ -1,9 +1,11 @@
 #include "../include/main.hpp"
+#include "../include/vars_global.hpp"
 
- #define NTHREADS 9
+ #define NTHREADS 2
 
 int threads_repeat;
-pthread_mutex_t lockM;
+
+Microwave forno;
 
 using namespace std;
 
@@ -27,16 +29,13 @@ void* trythis(void* rank)
     sleep(10);
   }*/
     long my_rank = (long) rank;
-    pthread_mutex_lock(&lockM);
-
-    unsigned long i = 0;
-    printf("\n Job %ld has started\n", my_rank);
-
-    for (i = 0; i < (0xFFFFFFFF); i++);
-
-    printf("\n Job %ld has finished\n", my_rank);
-
-    pthread_mutex_unlock(&lockM);
+    if(my_rank != 8){
+      forno.wait(p[my_rank]);
+      p[my_rank].cook_something();
+      forno.release(p[my_rank]);
+      p[my_rank].eat();
+      p[my_rank].work();
+    }
 
     return NULL;
 }
@@ -64,13 +63,26 @@ int main (int argc, char * argv []){
     int error;
     long thread;
 
+    int i;
+    for(i = 0; i < 10; i++){
+      p[i].setId(i);
+    }
+
     pthread_t* thread_handles;
 
     threads_repeat = strtol(argv[1], NULL, 10);
 
-    if (pthread_mutex_init(&lockM, NULL) != 0) {
+    for(i = 0; i < NTHREADS; i++){
+      
+      if (pthread_cond_init(&forno.cond_p[i], NULL) != 0) {
+        perror("\nCond init has failed");
+        return 1;
+      }
+
+      if (pthread_mutex_init(&forno.lock_p[i], NULL) != 0) {
         perror("\nMutex init has failed");
         return 1;
+      }
     }
 
     thread_handles = (pthread_t*) malloc (NTHREADS*sizeof(pthread_t));
@@ -90,7 +102,13 @@ int main (int argc, char * argv []){
     }
 
     free (thread_handles);
-    pthread_mutex_destroy(&lockM);
+    for(i = 0; i < NTHREADS; i++){
+      pthread_cond_destroy(&forno.cond_p[i]);
+
+      pthread_mutex_destroy(&forno.lock_p[i]);
+    }
+    
+    pthread_mutex_destroy(&forno.lock_forno);
 
     return 0;
 

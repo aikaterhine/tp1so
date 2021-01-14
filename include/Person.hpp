@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <time.h>
+#include <unistd.h>
 #include <stdio.h>
 
 using namespace std;
@@ -13,19 +14,20 @@ using namespace std;
     private:
       int _id;
       string _name;
+      bool _quer_usar;
 
     public:
       void setName(string);
       void setId(int);
+      void setQuer_usar(bool);
       string getName();
       int getId();
+      bool getQuer_usar();
     	Person(int, string);
       Person();
-
-      void cook_something(Person);
-      void eat(Person);
-      void work(Person);
-      void sleep(int);
+      void cook_something();
+      void eat();
+      void work();
 
   };
 

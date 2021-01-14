@@ -22,6 +22,7 @@ USO DO MUTEX NAS VARIAVEIS BOOL:
     //Estes locks servem para os casos onde aconteceu um unlock, mas a variável booleana está true
     /*Quando que isso acontece? Exemplo: Kripke checa se sheldon, howard ou leonard estão usando o forno. Para isto ele precisou trancar as             variáveis booleanas --> Em algum momento ele vai destrancar essas variáveis, maaaaas ele não mudou a variável booleana --> Ao destrancar,     esses locks abaixo vão sair do bloqueio em que estão e trancar as variáveis de novo.*/
     /*DETALHE: Pq Kripke não mandou sinal para a variável COND? Porque ele não mudou o valor da variável booleana(a COND serve para mudanças de           estado...pelo menos nesse contexto)*/
+    
     lock(sheldon_quer_usar)
     lock(howard_quer_usar)
     lock(leonard_quer_usar)
@@ -36,7 +37,9 @@ USO DO MUTEX NAS VARIAVEIS BOOL:
       if(leonard_quer_usar)
         pthread_cond_wait()
     }
+
   printf("AGORA EU POSSO USAR UHUUUUUUUUL!!!!!!");
+//trancaria o forno
 //lembrar de dar unlock nas variáveis após fazer as ações
 
 
