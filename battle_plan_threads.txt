@@ -19,9 +19,13 @@ USO DO MUTEX NAS VARIAVEIS BOOL:
   STUART:
   
     contexto: preciso saber se sheldon, howard ou leonard querem usar o forno.
-  
-    //para isto funcionar, eu preciso garantir que, toda vez que eles estiverem querendo usar o forno(variavel = true),
-    //o MUTEX deles vai estar locked, pois o wait só funciona se o mutex estiver locked 
+    //Estes locks servem para os casos onde aconteceu um unlock, mas a variável booleana está true
+    /*Quando que isso acontece? Exemplo: Kripke checa se sheldon, howard ou leonard estão usando o forno. Para isto ele precisou trancar as             variáveis booleanas --> Em algum momento ele vai destrancar essas variáveis, maaaaas ele não mudou a variável booleana --> Ao destrancar,     esses locks abaixo vão sair do bloqueio em que estão e trancar as variáveis de novo.*/
+    /*DETALHE: Pq Kripke não mandou sinal para a variável COND? Porque ele não mudou o valor da variável booleana(a COND serve para mudanças de           estado...pelo menos nesse contexto)*/
+    lock(sheldon_quer_usar)
+    lock(howard_quer_usar)
+    lock(leonard_quer_usar)
+    //este while, ifs e waits, servem para quando houve o envio do sinal, pq a variável bool mudou o estado(de false, que era o padrão, para true)
     while(sheldon_quer_usar or howard_quer_usar or leonard_quer_usar){//se, no momento desta verificação, nenhum dos 3 quer usar, sai do loop
       if(sheldon_quer_usar)
         pthread_cond_wait()
@@ -33,6 +37,7 @@ USO DO MUTEX NAS VARIAVEIS BOOL:
         pthread_cond_wait()
     }
   printf("AGORA EU POSSO USAR UHUUUUUUUUL!!!!!!");
+//lembrar de dar unlock nas variáveis após fazer as ações
 
 
 CONCLUSÃO: Não precisa de uma fila para definir a ordem de uso!! A lógica para todos os personagens é semelhante, envolve checar se alguem(ou vários alguens) está querendo usar o forno e, caso contrário, só vai! 
