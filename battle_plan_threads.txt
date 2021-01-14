@@ -3,7 +3,7 @@
 ////////////////////////////////////////////////////////////////////
 MUTEX                            --> bloqueia um recurso compartilhado(pedaço de código. Pode ser função, variável, um while...)
 
-DEADLOCK DESTE TP                --> A precisa usar um recurso compartilhado de B, que precisa de um recurso compartilhado de C, que precisa de um                                       recurso compartilhado de A.
+DEADLOCK DESTE TP                --> A precisa usar um recurso compartilhado de B, que precisa de um recurso compartilhado de C, que precisa de um recurso compartilhado de A.
 
 O QUE TODO MUNDO QUER SABER?     --> Se, na hora que ela quiser usar o forno, ela pode.
 
@@ -17,7 +17,7 @@ USO DO MUTEX NAS VARIAVEIS BOOL:
 - Primeiro de tudo ao usar wait da COND, é recomendado um loop while para conferir se as mudanças esperadas aconteceram(por causa de um fenômeno chamado "spurious wakeups", que tem relação com a implementação do wait).
 
   STUART:
-  
+
     contexto: preciso saber se sheldon, howard ou leonard querem usar o forno.
     //Estes locks servem para os casos onde aconteceu um unlock, mas a variável booleana está true
     /*Quando que isso acontece? Exemplo: Kripke checa se sheldon, howard ou leonard estão usando o forno. Para isto ele precisou trancar as             variáveis booleanas --> Em algum momento ele vai destrancar essas variáveis, maaaaas ele não mudou a variável booleana --> Ao destrancar,     esses locks abaixo vão sair do bloqueio em que estão e trancar as variáveis de novo.*/
@@ -29,7 +29,7 @@ USO DO MUTEX NAS VARIAVEIS BOOL:
     while(sheldon_quer_usar or howard_quer_usar or leonard_quer_usar){//se, no momento desta verificação, nenhum dos 3 quer usar, sai do loop
       if(sheldon_quer_usar)
         pthread_cond_wait()
-    
+
       if(howard_quer_usar)
         pthread_cond_wait()
 
@@ -40,6 +40,4 @@ USO DO MUTEX NAS VARIAVEIS BOOL:
 //lembrar de dar unlock nas variáveis após fazer as ações
 
 
-CONCLUSÃO: Não precisa de uma fila para definir a ordem de uso!! A lógica para todos os personagens é semelhante, envolve checar se alguem(ou vários alguens) está querendo usar o forno e, caso contrário, só vai! 
-
-  
+CONCLUSÃO: Não precisa de uma fila para definir a ordem de uso!! A lógica para todos os personagens é semelhante, envolve checar se alguem(ou vários alguens) está querendo usar o forno e, caso contrário, só vai!

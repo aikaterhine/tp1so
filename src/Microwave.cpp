@@ -4,15 +4,18 @@ Microwave::Microwave(){
 }
 
 void Microwave::wait(Person p){
-  cout << p.getName() << " quer usar o forno." << "\n";
+  cout << p.getName() << " quer usar o forno" << "\n";
 }
 
 void Microwave::release(Person p){
-  cout << p.getName() << " vai comer." << "\n";
+  srand48(time(NULL));
+  int number = drand48 () * 10; // tem q pausar a thread por esse tempo
+  cout << p.getName() << " vai comer" << "\n";
+  sleep(number);
 }
 
 void Microwave::check(){
-  //cout << p.getName() << " vai comer." << "\n";
+  //cout << p.getName() << " vai comer" << "\n";
 }
 
 /*

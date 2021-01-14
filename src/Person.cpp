@@ -53,20 +53,17 @@ int Person::getId(){
 	return _id;
 }
 
-void cook_something(Person p){
+void Person::cook_something(Person p){
 }
 
-void eat(Person p){
-  srand48(time(NULL));
-  int number = drand48 () * 10;
-  cout << number << endl;
-  // tem q pausar a thread por esse tempo
-}
-
-void sleep(int time){
+void Person::eat(Person p){
 
 }
 
-void work(Person p){
+void Person::sleep(int time){
+    sleep(time);
+}
 
+void Person::work(Person p){
+  cout << p.getName() << " voltou para o trabalho\n"<< endl;
 }
