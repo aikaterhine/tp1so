@@ -10,25 +10,4 @@
 
 using namespace std;
 
-  class Person {
-    private:
-      int _id;
-      string _name;
-      bool _quer_usar;
-
-    public:
-      void setName(string);
-      void setId(int);
-      void setQuer_usar(bool);
-      string getName();
-      int getId();
-      bool getQuer_usar();
-    	Person(int, string);
-      Person();
-      void cook_something();
-      void eat();
-      void work();
-
-  };
-
 #endif // PERSON_HPP

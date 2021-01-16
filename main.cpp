@@ -1,7 +1,7 @@
 #include "../include/main.hpp"
 #include "../include/vars_global.hpp"
 
- #define NTHREADS 2
+ #define NTHREADS 4
 
  /*
 
@@ -11,11 +11,212 @@
 4 - voltar ao trabalho
  */
 
+using namespace std;
+
+//CLASSES e VARS GLOBAL
+
+class Person {
+    private:
+      int _id;
+      string _name;
+      bool _quer_usar;
+
+    public:
+      Person(int userId, string userName){
+  _name = userName;
+  _id = userId;
+  _quer_usar = false;
+}
+
+  Person(){
+    _quer_usar = false;
+  }
+
+  void setName(string username){
+    _name = username;
+  }
+
+  void setId(int userId){
+  	_id = userId;
+    switch(userId){
+      case 0:
+        setName("Sheldon");
+        break;
+      case 1:
+        setName("Howard");//Amy
+        break;
+      case 2:
+        setName("Leonard");//Howard
+        break;
+      case 3:
+        setName("Raj");//Bernadette
+        break;
+      case 4:
+        setName("Leonard");
+        break;
+      case 5:
+        setName("Penny");
+        break;
+      case 6:
+        setName("Stuart");
+        break;
+      case 7:
+        setName("Kripke");
+        break;
+      case 8:
+        setName("Raj");
+        break;
+    }
+  }
+
+  void setQuer_usar(bool quer_usar){
+    _quer_usar = quer_usar; 
+  }
+
+  string getName(){
+  	return _name;
+  }
+
+  int getId(){
+  	return _id;
+  }
+
+  bool getQuer_usar(){
+    return _quer_usar;
+  }
+
+  void cook_something(){
+    cout << _name << " começa a esquentar algo" << "\n";
+    sleep(1);
+  }
+
+  void eat(){
+    srand48(time(NULL));
+    int number = 1 + (drand48 () * 2);
+    sleep(number);
+  }
+
+  void work(){
+    int number = 3 + (drand48 () * 3);
+    cout << _name << " voltou para o trabalho" << "\n";
+    sleep(number);
+  }
+
+};
+
+
+Person p[10];
+
+class Microwave {
+	private:
+		/**
+		* Variáveis globais.
+		*/
+		// Regiões críticas.
+
+		//pthread_mutex_t lock;
+
+/*
+		int pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr);
+		int pthread_mutex_lock(pthread_mutex_t *mutex);
+		int pthread_mutex_unlock(pthread_mutex_t *mutex);
+
+		int pthread_mutex_destroy(pthread_mutex_t *mutex);
+		int pthread_cond_init(pthread_cond_t *cond, const pthread_condattr_t *attr);
+		int pthread_cond_signal(pthread_cond_t *cond);
+		int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex);
+		int pthread_cond_destroy(pthread_cond_t *cond);
+		*/
+
+	public:
+		pthread_mutex_t lock_forno;
+		pthread_mutex_t lock_p[NTHREADS];
+		pthread_cond_t  cond_p[NTHREADS];
+
+		Microwave(){
+    }
+
+void wait(Person pessoa){
+  //checa se pode usar, usando um loop
+  if(pessoa.getId() == 0){
+    pthread_mutex_lock(&lock_p[pessoa.getId()]);
+    
+    cout << pessoa.getName() << " quer usar o forno." << "\n";
+    pessoa.setQuer_usar(true);
+
+    //tranca o forno
+    pthread_mutex_lock(&lock_forno);
+  }
+  else
+  if(pessoa.getId() == 1){//trocar para 2, quando acabar os testes
+    pthread_mutex_lock(&lock_p[0]);
+    while(p[0].getQuer_usar()){
+      pthread_cond_wait(&cond_p[0], &lock_p[0]);
+    }
+    pthread_mutex_lock(&lock_p[pessoa.getId()]);
+
+    cout << pessoa.getName() << " quer usar o forno." << "\n";
+    pessoa.setQuer_usar(true);
+
+    //tranca o forno
+    pthread_mutex_lock(&lock_forno);
+    //destranca variáveis quer_usar
+    pthread_mutex_unlock(&lock_p[0]);
+  }
+  
+
+}
+
+void release(Person pessoa){
+  cout << pessoa.getName() << " vai comer." << "\n";
+  
+  pessoa.setQuer_usar(false);
+  pthread_cond_signal(&cond_p[pessoa.getId()]);
+  pthread_mutex_unlock(&lock_p[pessoa.getId()]);
+  //destranca o forno
+  pthread_mutex_unlock(&lock_forno);
+}
+
+void check(){
+  if(p[0].getQuer_usar() and p[1].getQuer_usar() and p[2].getQuer_usar())//lembrar de trocar os números quando acabar os testes(dentro do if também)
+  {
+    //int nmr_pessoa = drand48 () * 2;
+    
+  }
+}
+
+/*
+int Microwave::pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr);
+int Microwave::pthread_mutex_lock(pthread_mutex_t *mutex);
+int Microwave::pthread_mutex_unlock(pthread_mutex_t *mutex);
+
+int Microwave::pthread_mutex_destroy(pthread_mutex_t *mutex);
+int Microwave::pthread_cond_init(pthread_cond_t *cond, const pthread_condattr_t *attr)
+int Microwave::pthread_cond_signal(pthread_cond_t *cond);
+int Microwave::pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
+int Microwave::pthread_cond_destroy(pthread_cond_t *cond);
+*/
+
+};
+
+
+
+
+
+
+
+
+
+
+
+ //MAIN
+
 int threads_repeat;
 
 Microwave forno;
+int thrds_terminated = 0;
+pthread_mutex_t lock_thrds_terminated;
 
-using namespace std;
 
 void *Hello (void* rank){
     long my_rank = (long) rank;
@@ -32,21 +233,40 @@ void *Hello (void* rank){
 
 void* trythis(void* rank)
 {
-  /*for (int i = 0; i < threads_repeat; i++) {
-     code
-    printf("\n Repetindo pela %dª vez\n", i+1);
-    sleep(10);
-  }*/
-    long my_rank = (long) rank;
-    if(my_rank != 8){
+  long my_rank = (long) rank;
+  if(my_rank != 3){//trocar para 8 de volta
+    for (int i = 0; i < threads_repeat; i++) {
       forno.wait(p[my_rank]);
       p[my_rank].cook_something();
       forno.release(p[my_rank]);
       p[my_rank].eat();
       p[my_rank].work();
-    }
 
-    return NULL;
+      if(i == threads_repeat - 1){
+        pthread_mutex_lock(&lock_thrds_terminated);
+        thrds_terminated++;
+        pthread_mutex_unlock(&lock_thrds_terminated);
+        cout << p[my_rank].getName() << ": Terminou suas tarefas." << "\n";
+        return NULL;
+      }
+    }
+  }
+  else{
+    while(1){
+      sleep(5);
+      forno.check();
+    
+      pthread_mutex_lock(&lock_thrds_terminated);
+      if(thrds_terminated == NTHREADS - 1){
+        cout << "Numero de threads terminadas: " << thrds_terminated << "\n";
+        cout << p[my_rank].getName() << ": Terminou suas tarefas." << "\n";
+        return NULL;
+      }
+      pthread_mutex_unlock(&lock_thrds_terminated);
+    }
+  } 
+  cout << "Alguma coisa está errada." << "\n";
+  return NULL;
 }
 
 
@@ -69,6 +289,16 @@ int main (int argc, char * argv []){
     pthread_t* thread_handles;
 
     threads_repeat = strtol(argv[1], NULL, 10);
+
+    if (pthread_mutex_init(&lock_thrds_terminated, NULL) != 0) {
+        perror("\nMutex init has failed");
+        return 1;
+    }
+    
+    if (pthread_mutex_init(&forno.lock_forno, NULL) != 0) {
+        perror("\nMutex init has failed");
+        return 1;
+    }
 
     for(i = 0; i < NTHREADS; i++){
       
@@ -99,6 +329,7 @@ int main (int argc, char * argv []){
       pthread_join(thread_handles[thread], NULL);
     }
 
+
     free (thread_handles);
     for(i = 0; i < NTHREADS; i++){
       pthread_cond_destroy(&forno.cond_p[i]);
@@ -107,6 +338,7 @@ int main (int argc, char * argv []){
     }
     
     pthread_mutex_destroy(&forno.lock_forno);
+    pthread_mutex_destroy(&lock_thrds_terminated);
 
     return 0;
 
