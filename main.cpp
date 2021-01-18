@@ -3,6 +3,16 @@
 
  #define NTHREADS 4
 
+ #define SHELDON 0
+ #define AMY 1
+ #define HOWARD 2
+ #define BERNADETTE 3
+ #define LEONARD 4
+ #define PENNY 5
+ #define STUART 6
+ #define KRIPKE 7
+ #define RAJ 8
+
  /*
 
 1 - quer usar o forno
@@ -70,7 +80,7 @@ class Person {
   }
 
   void setQuer_usar(bool quer_usar){
-    _quer_usar = quer_usar; 
+    _quer_usar = quer_usar;
   }
 
   string getName(){
@@ -140,7 +150,7 @@ void wait(Person pessoa){
   //checa se pode usar, usando um loop
   if(pessoa.getId() == 0){
     pthread_mutex_lock(&lock_p[pessoa.getId()]);
-    
+
     cout << pessoa.getName() << " quer usar o forno." << "\n";
     pessoa.setQuer_usar(true);
 
@@ -163,13 +173,13 @@ void wait(Person pessoa){
     //destranca variáveis quer_usar
     pthread_mutex_unlock(&lock_p[0]);
   }
-  
+
 
 }
 
 void release(Person pessoa){
   cout << pessoa.getName() << " vai comer." << "\n";
-  
+
   pessoa.setQuer_usar(false);
   pthread_cond_signal(&cond_p[pessoa.getId()]);
   pthread_mutex_unlock(&lock_p[pessoa.getId()]);
@@ -181,7 +191,7 @@ void check(){
   if(p[0].getQuer_usar() and p[1].getQuer_usar() and p[2].getQuer_usar())//lembrar de trocar os números quando acabar os testes(dentro do if também)
   {
     //int nmr_pessoa = drand48 () * 2;
-    
+
   }
 }
 
@@ -225,7 +235,7 @@ void *Hello (void* rank){
     p.setId(my_rank);
 
     cout << "\nHi from thread " << my_rank << " of " << NTHREADS << "\n" << endl;
-    
+
     //sleep(10);
 
     return NULL;
@@ -255,7 +265,7 @@ void* trythis(void* rank)
     while(1){
       sleep(5);
       forno.check();
-    
+
       pthread_mutex_lock(&lock_thrds_terminated);
       if(thrds_terminated == NTHREADS - 1){
         cout << "Numero de threads terminadas: " << thrds_terminated << "\n";
@@ -264,7 +274,7 @@ void* trythis(void* rank)
       }
       pthread_mutex_unlock(&lock_thrds_terminated);
     }
-  } 
+  }
   cout << "Alguma coisa está errada." << "\n";
   return NULL;
 }
@@ -294,14 +304,14 @@ int main (int argc, char * argv []){
         perror("\nMutex init has failed");
         return 1;
     }
-    
+
     if (pthread_mutex_init(&forno.lock_forno, NULL) != 0) {
         perror("\nMutex init has failed");
         return 1;
     }
 
     for(i = 0; i < NTHREADS; i++){
-      
+
       if (pthread_cond_init(&forno.cond_p[i], NULL) != 0) {
         perror("\nCond init has failed");
         return 1;
@@ -336,7 +346,7 @@ int main (int argc, char * argv []){
 
       pthread_mutex_destroy(&forno.lock_p[i]);
     }
-    
+
     pthread_mutex_destroy(&forno.lock_forno);
     pthread_mutex_destroy(&lock_thrds_terminated);
 
