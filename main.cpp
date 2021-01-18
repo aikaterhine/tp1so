@@ -13,8 +13,14 @@
 
 using namespace std;
 
-//CLASSES e VARS GLOBAL
+//CLASSES, VARS e FUNCOES GLOBAIS
+pthread_mutex_t lock_forno;
+pthread_mutex_t lock_p[NTHREADS];
+pthread_cond_t  cond_p[NTHREADS];
+bool raj_liberou = false;
+pthread_mutex_t lock_raj_liberou;
 
+//CLASSES
 class Person {
     private:
       int _id;
@@ -86,6 +92,7 @@ class Person {
   }
 
   void cook_something(){
+    trata_prioridades()
     cout << _name << " começa a esquentar algo" << "\n";
     sleep(1);
   }
@@ -104,8 +111,68 @@ class Person {
 
 };
 
-
+//Variáveis globais
 Person p[10];
+
+//FUNCOES GLOBAIS
+void trata_prioridades(Person pessoa, bool usar_forno = true){
+  if(pessoa.getId() == 0){
+    pthread_mutex_lock(&lock_p[2]);//trocar o numero 2 depois dos testes
+    while(p[2].getQuer_usar()){//trocar o numero 2 depois dos testes
+      pthread_cond_wait(&cond_p[2], &lock_p[2]);//trocar o numero 2 depois dos testes
+      
+      pthread_mutex_lock(&lock_raj_liberou);
+      if(raj_liberou){
+        pthread_mutex_unlock(&lock_raj_liberou);
+        break;
+      }
+    }
+    if(usar_forno){
+      cout << pessoa.getName() << " começa a esquentar algo" << "\n";
+      //tranca o forno
+      pthread_mutex_lock(&lock_forno);
+    } 
+    pthread_mutex_unlock(&lock_p[2]);//trocar o numero 2 depois dos testes
+  }
+  else
+  if(pessoa.getId() == 1){//trocar para 2, quando acabar os testes
+    pthread_mutex_lock(&lock_p[0]);
+    while(p[0].getQuer_usar()){
+      pthread_cond_wait(&cond_p[0], &lock_p[0]);
+
+      pthread_mutex_lock(&lock_raj_liberou);
+      if(raj_liberou){
+        pthread_mutex_unlock(&lock_raj_liberou);
+        break;
+      }
+    }
+    if(usar_forno){
+      cout << pessoa.getName() << " começa a esquentar algo" << "\n";
+      //tranca o forno
+      pthread_mutex_lock(&lock_forno);
+    } 
+    pthread_mutex_unlock(&lock_p[0]);
+  }
+  else
+  if(pessoa.getId() == 2){//trocar para 4, quando acabar os testes
+    pthread_mutex_lock(&lock_p[1]);//trocar para 4, quando acabar os testes
+    while(p[1].getQuer_usar()){//trocar para 4, quando acabar os testes
+      pthread_cond_wait(&cond_p[1], &lock_p[1]);//trocar para 4, quando acabar os testes
+
+      pthread_mutex_lock(&lock_raj_liberou);
+      if(raj_liberou){
+        pthread_mutex_unlock(&lock_raj_liberou);
+        break;
+      }
+    }
+    if(usar_forno){
+      cout << pessoa.getName() << " começa a esquentar algo" << "\n";
+      //tranca o forno
+      pthread_mutex_lock(&lock_forno);
+    } 
+    pthread_mutex_unlock(&lock_p[1]);
+  }
+}
 
 class Microwave {
 	private:
@@ -129,51 +196,24 @@ class Microwave {
 		*/
 
 	public:
-		pthread_mutex_t lock_forno;
-		pthread_mutex_t lock_p[NTHREADS];
-		pthread_cond_t  cond_p[NTHREADS];
-
 		Microwave(){
     }
 
 void wait(Person pessoa){
-  //checa se pode usar, usando um loop
-  if(pessoa.getId() == 0){
-    pthread_mutex_lock(&lock_p[pessoa.getId()]);
-    
-    cout << pessoa.getName() << " quer usar o forno." << "\n";
-    pessoa.setQuer_usar(true);
-
-    //tranca o forno
-    pthread_mutex_lock(&lock_forno);
-  }
-  else
-  if(pessoa.getId() == 1){//trocar para 2, quando acabar os testes
-    pthread_mutex_lock(&lock_p[0]);
-    while(p[0].getQuer_usar()){
-      pthread_cond_wait(&cond_p[0], &lock_p[0]);
-    }
-    pthread_mutex_lock(&lock_p[pessoa.getId()]);
-
-    cout << pessoa.getName() << " quer usar o forno." << "\n";
-    pessoa.setQuer_usar(true);
-
-    //tranca o forno
-    pthread_mutex_lock(&lock_forno);
-    //destranca variáveis quer_usar
-    pthread_mutex_unlock(&lock_p[0]);
-  }
-  
-
+  pthread_mutex_lock(&lock_p[pessoa.getId()]);
+  pessoa.setQuer_usar(true);
+  pthread_mutex_unlock(&lock_p[pessoa.getId()]);
+  cout << pessoa.getName() << " quer usar o forno." << "\n";
 }
 
 void release(Person pessoa){
   cout << pessoa.getName() << " vai comer." << "\n";
   
+  pthread_mutex_lock(&lock_p[pessoa.getId()]);
   pessoa.setQuer_usar(false);
   pthread_cond_signal(&cond_p[pessoa.getId()]);
   pthread_mutex_unlock(&lock_p[pessoa.getId()]);
-  //destranca o forno
+
   pthread_mutex_unlock(&lock_forno);
 }
 
@@ -181,7 +221,10 @@ void check(){
   if(p[0].getQuer_usar() and p[1].getQuer_usar() and p[2].getQuer_usar())//lembrar de trocar os números quando acabar os testes(dentro do if também)
   {
     //int nmr_pessoa = drand48 () * 2;
-    
+    pthread_mutex_lock(&lock_raj_liberou);
+    raj_liberou = true;
+    pthread_mutex_unlock(&lock_raj_liberou);
+    pthread_cond_signal(&cond_p[2]);//liberando o sheldon(numero 0)
   }
 }
 
@@ -290,24 +333,30 @@ int main (int argc, char * argv []){
 
     threads_repeat = strtol(argv[1], NULL, 10);
 
+    if (pthread_mutex_init(&lock_raj_liberou, NULL) != 0) {
+      perror("\nMutex init has failed");
+      return 1;
+    }
+
+
     if (pthread_mutex_init(&lock_thrds_terminated, NULL) != 0) {
         perror("\nMutex init has failed");
         return 1;
     }
     
-    if (pthread_mutex_init(&forno.lock_forno, NULL) != 0) {
+    if (pthread_mutex_init(&lock_forno, NULL) != 0) {
         perror("\nMutex init has failed");
         return 1;
     }
 
     for(i = 0; i < NTHREADS; i++){
       
-      if (pthread_cond_init(&forno.cond_p[i], NULL) != 0) {
+      if (pthread_cond_init(&cond_p[i], NULL) != 0) {
         perror("\nCond init has failed");
         return 1;
       }
 
-      if (pthread_mutex_init(&forno.lock_p[i], NULL) != 0) {
+      if (pthread_mutex_init(&lock_p[i], NULL) != 0) {
         perror("\nMutex init has failed");
         return 1;
       }
@@ -332,13 +381,14 @@ int main (int argc, char * argv []){
 
     free (thread_handles);
     for(i = 0; i < NTHREADS; i++){
-      pthread_cond_destroy(&forno.cond_p[i]);
+      pthread_cond_destroy(&cond_p[i]);
 
-      pthread_mutex_destroy(&forno.lock_p[i]);
+      pthread_mutex_destroy(&lock_p[i]);
     }
     
-    pthread_mutex_destroy(&forno.lock_forno);
+    pthread_mutex_destroy(&lock_forno);
     pthread_mutex_destroy(&lock_thrds_terminated);
+    pthread_mutex_destroy(&lock_raj_liberou);
 
     return 0;
 
