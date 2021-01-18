@@ -3,6 +3,16 @@
 
  #define NTHREADS 4
 
+ #define SHELDON 0
+ #define AMY 1
+ #define HOWARD 2
+ #define BERNADETTE 3
+ #define LEONARD 4
+ #define PENNY 5
+ #define STUART 6
+ #define KRIPKE 7
+ #define RAJ 8
+
  /*
 
 1 - quer usar o forno
@@ -76,7 +86,7 @@ class Person {
   }
 
   void setQuer_usar(bool quer_usar){
-    _quer_usar = quer_usar; 
+    _quer_usar = quer_usar;
   }
 
   string getName(){
@@ -268,7 +278,7 @@ void *Hello (void* rank){
     p.setId(my_rank);
 
     cout << "\nHi from thread " << my_rank << " of " << NTHREADS << "\n" << endl;
-    
+
     //sleep(10);
 
     return NULL;
@@ -298,7 +308,7 @@ void* trythis(void* rank)
     while(1){
       sleep(5);
       forno.check();
-    
+
       pthread_mutex_lock(&lock_thrds_terminated);
       if(thrds_terminated == NTHREADS - 1){
         cout << "Numero de threads terminadas: " << thrds_terminated << "\n";
@@ -307,7 +317,7 @@ void* trythis(void* rank)
       }
       pthread_mutex_unlock(&lock_thrds_terminated);
     }
-  } 
+  }
   cout << "Alguma coisa está errada." << "\n";
   return NULL;
 }
