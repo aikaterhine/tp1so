@@ -102,8 +102,6 @@ class Person {
   }
 
   void cook_something(){
-    trata_prioridades()
-    cout << _name << " começa a esquentar algo" << "\n";
     sleep(1);
   }
 
@@ -125,9 +123,15 @@ class Person {
 Person p[10];
 
 //FUNCOES GLOBAIS
-void trata_prioridades(Person pessoa, bool usar_forno = true){
+void trata_prioridades(Person pessoa){
+  //tranca o forno
+  pthread_mutex_lock(&lock_forno);
+
   if(pessoa.getId() == 0){
     pthread_mutex_lock(&lock_p[2]);//trocar o numero 2 depois dos testes
+    if(p[2].getQuer_usar())
+      pthread_mutex_unlock(&lock_forno);
+    //cout << "--------------------------------------------------" << pessoa.getName() << " - " << p[2].getName() << "quer_usar pós PRIORIDADE: " << p[2].getQuer_usar() << "\n";
     while(p[2].getQuer_usar()){//trocar o numero 2 depois dos testes
       pthread_cond_wait(&cond_p[2], &lock_p[2]);//trocar o numero 2 depois dos testes
       
@@ -137,16 +141,18 @@ void trata_prioridades(Person pessoa, bool usar_forno = true){
         break;
       }
     }
-    if(usar_forno){
-      cout << pessoa.getName() << " começa a esquentar algo" << "\n";
-      //tranca o forno
-      pthread_mutex_lock(&lock_forno);
-    } 
+
+    cout << pessoa.getName() << " começa a esquentar algo" << "\n";
     pthread_mutex_unlock(&lock_p[2]);//trocar o numero 2 depois dos testes
   }
   else
   if(pessoa.getId() == 1){//trocar para 2, quando acabar os testes
     pthread_mutex_lock(&lock_p[0]);
+    if(p[0].getQuer_usar())
+      pthread_mutex_unlock(&lock_forno);
+
+    //cout << "--------------------------------------------------" << pessoa.getName() << " - " << p[0].getName() << "quer_usar pós PRIORIDADE: " << p[0].getQuer_usar() << "\n";
+
     while(p[0].getQuer_usar()){
       pthread_cond_wait(&cond_p[0], &lock_p[0]);
 
@@ -156,16 +162,20 @@ void trata_prioridades(Person pessoa, bool usar_forno = true){
         break;
       }
     }
-    if(usar_forno){
-      cout << pessoa.getName() << " começa a esquentar algo" << "\n";
-      //tranca o forno
-      pthread_mutex_lock(&lock_forno);
-    } 
+
+
+    cout << pessoa.getName() << " começa a esquentar algo" << "\n";
+
     pthread_mutex_unlock(&lock_p[0]);
   }
   else
   if(pessoa.getId() == 2){//trocar para 4, quando acabar os testes
     pthread_mutex_lock(&lock_p[1]);//trocar para 4, quando acabar os testes
+    if(p[1].getQuer_usar())
+      pthread_mutex_unlock(&lock_forno);
+
+    //cout << "--------------------------------------------------" << pessoa.getName() << " - " << p[1].getName() << " quer_usar pós PRIORIDADE: " << p[1].getQuer_usar() << "\n";
+
     while(p[1].getQuer_usar()){//trocar para 4, quando acabar os testes
       pthread_cond_wait(&cond_p[1], &lock_p[1]);//trocar para 4, quando acabar os testes
 
@@ -175,11 +185,10 @@ void trata_prioridades(Person pessoa, bool usar_forno = true){
         break;
       }
     }
-    if(usar_forno){
-      cout << pessoa.getName() << " começa a esquentar algo" << "\n";
-      //tranca o forno
-      pthread_mutex_lock(&lock_forno);
-    } 
+
+
+    cout << pessoa.getName() << " começa a esquentar algo" << "\n";
+
     pthread_mutex_unlock(&lock_p[1]);
   }
 }
@@ -209,25 +218,30 @@ class Microwave {
 		Microwave(){
     }
 
-void wait(Person pessoa){
+void wait(Person &pessoa){
   pthread_mutex_lock(&lock_p[pessoa.getId()]);
   pessoa.setQuer_usar(true);
   pthread_mutex_unlock(&lock_p[pessoa.getId()]);
+
   cout << pessoa.getName() << " quer usar o forno." << "\n";
+  //cout << "--------------------------------------------------" << pessoa.getName() << " - " << pessoa.getId() << " quer_usar depois \"quer usar forno\": " << pessoa.getQuer_usar() << "\n";
+  
+  trata_prioridades(pessoa);
 }
 
-void release(Person pessoa){
-  cout << pessoa.getName() << " vai comer." << "\n";
-  
+void release(Person &pessoa){
   pthread_mutex_lock(&lock_p[pessoa.getId()]);
   pessoa.setQuer_usar(false);
   pthread_cond_signal(&cond_p[pessoa.getId()]);
   pthread_mutex_unlock(&lock_p[pessoa.getId()]);
 
   pthread_mutex_unlock(&lock_forno);
+
+  cout << pessoa.getName() << " vai comer." << "\n";
 }
 
 void check(){
+  //cout << "--------------------------------------------------" << "Variaveis quer_usar: " << p[0].getQuer_usar() << " " << p[1].getQuer_usar() << " " << p[2].getQuer_usar() << "\n";
   if(p[0].getQuer_usar() and p[1].getQuer_usar() and p[2].getQuer_usar())//lembrar de trocar os números quando acabar os testes(dentro do if também)
   {
     //int nmr_pessoa = drand48 () * 2;
@@ -235,6 +249,7 @@ void check(){
     raj_liberou = true;
     pthread_mutex_unlock(&lock_raj_liberou);
     pthread_cond_signal(&cond_p[2]);//liberando o sheldon(numero 0)
+    cout << "Raj detectou um deadlock, liberando " << p[0].getName() << "\n";
   }
 }
 
@@ -342,7 +357,7 @@ int main (int argc, char * argv []){
     pthread_t* thread_handles;
 
     threads_repeat = strtol(argv[1], NULL, 10);
-
+    
     if (pthread_mutex_init(&lock_raj_liberou, NULL) != 0) {
       perror("\nMutex init has failed");
       return 1;
@@ -381,8 +396,6 @@ int main (int argc, char * argv []){
       if (error != 0)
         perror("\nThread can't be created");
     }
-
-    printf("\nHello from the main thread\n");
 
     for (thread = 0; thread < NTHREADS; thread++){
       pthread_join(thread_handles[thread], NULL);
