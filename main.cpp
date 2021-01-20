@@ -42,7 +42,7 @@ class Person {
           setName("Howard");
           break;
         case LEONARD:
-          setName("Leonard");//Howard
+          setName("Leonard");
           break;
         case RAJ:
           setName("Raj");
@@ -118,6 +118,11 @@ int prioridades(int idPessoa){
     case LEONARD:
       prior=HOWARD;
       break;
+    case STUART:
+      prior=STUART;//como o stuart tem mais de um prior, a gente coloca ele mesmo como prior e trata nas funções
+      break;
+    default:
+      perror("Prioridade não encontrada!");
   }
   return prior;
 }
@@ -126,8 +131,8 @@ void trata_prioridades(Person pessoa){
 
   int idPessoa = pessoa.getId();
   int prior = prioridades(idPessoa);
-
-  if(prior!= -1){
+  //cout << "--------------------------------------" << pessoa.getName() << ": Seu prior é: " << p[prior].getName() << "\n";
+  if((prior!= -1) and (prior != STUART)){
     //tranca o forno
     pthread_mutex_lock(&lock_forno);
 
@@ -136,6 +141,10 @@ void trata_prioridades(Person pessoa){
       pthread_mutex_unlock(&lock_forno);
     while(p[prior].getQuer_usar()){
       pthread_cond_wait(&cond_p[prior], &lock_p[prior]);
+
+      if(!p[prior].getQuer_usar())
+        pthread_mutex_lock(&lock_forno);
+      
 
       pthread_mutex_lock(&lock_raj_liberou);
       if(raj_liberou){
@@ -149,6 +158,40 @@ void trata_prioridades(Person pessoa){
     pthread_mutex_unlock(&lock_cout);
     pthread_mutex_unlock(&lock_p[prior]);
   }
+  else
+  if(prior == STUART){//falta tratar o lock unlock
+    //tranca o forno
+    pthread_mutex_lock(&lock_forno);
+
+    pthread_mutex_lock(&lock_p[SHELDON]);
+    pthread_mutex_lock(&lock_p[HOWARD]);
+    pthread_mutex_lock(&lock_p[LEONARD]);  
+    if(p[SHELDON].getQuer_usar() or p[HOWARD].getQuer_usar() or p[LEONARD].getQuer_usar())
+      pthread_mutex_unlock(&lock_forno);
+
+    pthread_mutex_unlock(&lock_p[HOWARD]);
+    pthread_mutex_unlock(&lock_p[LEONARD]);
+    while(p[SHELDON].getQuer_usar())
+      pthread_cond_wait(&cond_p[SHELDON], &lock_p[SHELDON]);
+
+    pthread_mutex_lock(&lock_p[HOWARD]);
+    while(p[HOWARD].getQuer_usar())
+      pthread_cond_wait(&cond_p[HOWARD], &lock_p[HOWARD]);
+
+    pthread_mutex_lock(&lock_p[LEONARD]);
+    while(p[LEONARD].getQuer_usar())
+      pthread_cond_wait(&cond_p[LEONARD], &lock_p[LEONARD]);
+    
+
+    pthread_mutex_lock(&lock_cout);
+    cout << pessoa.getName() << " começa a esquentar algo" << "\n";
+    pthread_mutex_unlock(&lock_cout);
+
+    pthread_mutex_unlock(&lock_p[SHELDON]);
+    pthread_mutex_unlock(&lock_p[HOWARD]);
+    pthread_mutex_unlock(&lock_p[LEONARD]);
+  }
+     
 }
 
 class Microwave {
@@ -171,7 +214,7 @@ class Microwave {
     void release(Person &pessoa){
       pthread_mutex_lock(&lock_p[pessoa.getId()]);
       pessoa.setQuer_usar(false);
-      pthread_cond_signal(&cond_p[pessoa.getId()]);
+      pthread_cond_broadcast(&cond_p[pessoa.getId()]);
       pthread_mutex_unlock(&lock_p[pessoa.getId()]);
 
       pthread_mutex_unlock(&lock_forno);
@@ -194,7 +237,7 @@ class Microwave {
           pthread_mutex_lock(&lock_raj_liberou);
           raj_liberou = true;
           pthread_mutex_unlock(&lock_raj_liberou);
-          pthread_cond_signal(&cond_p[prior]); //liberando pessoa de acordo com numero sorteado
+          pthread_cond_broadcast(&cond_p[prior]); //liberando pessoa de acordo com numero sorteado
           pthread_mutex_lock(&lock_cout);
           cout << "Raj detectou um deadlock, liberando " << p[nmr_pessoa].getName() << "\n";
           pthread_mutex_unlock(&lock_cout);
