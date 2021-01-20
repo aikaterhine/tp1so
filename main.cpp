@@ -182,6 +182,9 @@ class Microwave {
     }
 
     void check(){
+      pthread_mutex_lock(&lock_p[SHELDON]);
+      pthread_mutex_lock(&lock_p[HOWARD]);
+      pthread_mutex_lock(&lock_p[LEONARD]);
       if(p[SHELDON].getQuer_usar() and p[HOWARD].getQuer_usar() and p[LEONARD].getQuer_usar()){
         srand48(time(NULL));
         int nmr_pessoa = drand48 () * 2;
@@ -197,6 +200,9 @@ class Microwave {
           pthread_mutex_unlock(&lock_cout);
         }
       }
+      pthread_mutex_unlock(&lock_p[SHELDON]);
+      pthread_mutex_unlock(&lock_p[HOWARD]);
+      pthread_mutex_unlock(&lock_p[LEONARD]);
     }
 };
 
