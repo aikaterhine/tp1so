@@ -137,52 +137,96 @@ void trata_prioridades(Person pessoa){
     pthread_mutex_lock(&lock_forno);
 
     pthread_mutex_lock(&lock_p[prior]);
-    if(p[prior].getQuer_usar())
+    if(p[prior].getQuer_usar()){
       pthread_mutex_unlock(&lock_forno);
-    while(p[prior].getQuer_usar()){
-      pthread_cond_wait(&cond_p[prior], &lock_p[prior]);
-
-      if(!p[prior].getQuer_usar())
-        pthread_mutex_lock(&lock_forno);
-      
-
-      pthread_mutex_lock(&lock_raj_liberou);
-      if(raj_liberou){
-        pthread_mutex_unlock(&lock_raj_liberou);
-        break;
+      cout << "--------------------------------------" << pessoa.getName() << ": Esta esperando " << p[prior].getName() << "\n";
+      while(p[prior].getQuer_usar()){
+        pthread_cond_wait(&cond_p[prior], &lock_p[prior]);
+        cout << "--------------------------------------" << pessoa.getName() << ": Continua esperando " << p[prior].getName() << "\n";
+        pthread_mutex_lock(&lock_raj_liberou);
+        if(raj_liberou){
+          raj_liberou = false;
+          pthread_mutex_unlock(&lock_raj_liberou);
+          break;
+        }
+        else
+          pthread_mutex_unlock(&lock_raj_liberou);
       }
+      cout << "--------------------------------------" << pessoa.getName() << ": Parou de esperar " << p[prior].getName() << "\n";
+      pthread_mutex_lock(&lock_forno);
     }
-
     pthread_mutex_lock(&lock_cout);
     cout << pessoa.getName() << " começa a esquentar algo" << "\n";
     pthread_mutex_unlock(&lock_cout);
     pthread_mutex_unlock(&lock_p[prior]);
   }
   else
-  if(prior == STUART){//falta tratar o lock unlock
+  if(prior == STUART){
     //tranca o forno
     pthread_mutex_lock(&lock_forno);
 
     pthread_mutex_lock(&lock_p[SHELDON]);
     pthread_mutex_lock(&lock_p[HOWARD]);
     pthread_mutex_lock(&lock_p[LEONARD]);  
-    if(p[SHELDON].getQuer_usar() or p[HOWARD].getQuer_usar() or p[LEONARD].getQuer_usar())
+    if(p[SHELDON].getQuer_usar() or p[HOWARD].getQuer_usar() or p[LEONARD].getQuer_usar()){//extenda esse if para incluir os while tbm e no fim do if tranque o forno
       pthread_mutex_unlock(&lock_forno);
 
-    pthread_mutex_unlock(&lock_p[HOWARD]);
-    pthread_mutex_unlock(&lock_p[LEONARD]);
-    while(p[SHELDON].getQuer_usar())
-      pthread_cond_wait(&cond_p[SHELDON], &lock_p[SHELDON]);
+      //os 3 querem usar
+      while(p[SHELDON].getQuer_usar() and p[HOWARD].getQuer_usar() and p[LEONARD].getQuer_usar()){
+        pthread_mutex_unlock(&lock_p[SHELDON]);
+        pthread_mutex_unlock(&lock_p[HOWARD]);
+        pthread_mutex_unlock(&lock_p[LEONARD]);
+        
+        sleep(1);
 
-    pthread_mutex_lock(&lock_p[HOWARD]);
-    while(p[HOWARD].getQuer_usar())
-      pthread_cond_wait(&cond_p[HOWARD], &lock_p[HOWARD]);
+        pthread_mutex_lock(&lock_p[SHELDON]);
+        pthread_mutex_lock(&lock_p[HOWARD]);
+        pthread_mutex_lock(&lock_p[LEONARD]);
+      }
 
-    pthread_mutex_lock(&lock_p[LEONARD]);
-    while(p[LEONARD].getQuer_usar())
-      pthread_cond_wait(&cond_p[LEONARD], &lock_p[LEONARD]);
-    
+      //um par quer usar
+      while(p[SHELDON].getQuer_usar() and p[HOWARD].getQuer_usar()){
+        while(p[SHELDON].getQuer_usar())
+          pthread_cond_wait(&cond_p[SHELDON], &lock_p[SHELDON]);
 
+        pthread_cond_signal(&cond_p[SHELDON]);
+        pthread_mutex_unlock(&lock_p[SHELDON]);
+        pthread_mutex_unlock(&lock_p[HOWARD]);
+
+        sleep(1);
+
+        pthread_mutex_lock(&lock_p[SHELDON]);
+        pthread_mutex_lock(&lock_p[HOWARD]);
+      }
+
+      while(p[HOWARD].getQuer_usar() and p[LEONARD].getQuer_usar()){
+
+      }
+
+      while(p[LEONARD].getQuer_usar() and p[SHELDON].getQuer_usar()){
+
+      }
+      
+      // um dos 3 quer usar
+      
+      
+      //provavelmente vai retirar os while abaixo
+      pthread_mutex_unlock(&lock_p[HOWARD]);
+      pthread_mutex_unlock(&lock_p[LEONARD]);
+      while(p[SHELDON].getQuer_usar())
+        pthread_cond_wait(&cond_p[SHELDON], &lock_p[SHELDON]);
+
+      pthread_mutex_lock(&lock_p[HOWARD]);
+      while(p[HOWARD].getQuer_usar())
+        pthread_cond_wait(&cond_p[HOWARD], &lock_p[HOWARD]);
+      
+
+      pthread_mutex_lock(&lock_p[LEONARD]);
+      while(p[LEONARD].getQuer_usar())
+        pthread_cond_wait(&cond_p[LEONARD], &lock_p[LEONARD]);
+
+      pthread_mutex_lock(&lock_forno);
+    }
     pthread_mutex_lock(&lock_cout);
     cout << pessoa.getName() << " começa a esquentar algo" << "\n";
     pthread_mutex_unlock(&lock_cout);
