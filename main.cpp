@@ -9,8 +9,10 @@ pthread_cond_t  cond_p[NTHREADS];
 pthread_mutex_t lock_raj_liberou;
 pthread_mutex_t lock_cout;
 pthread_mutex_t lock_primeiro_do_casal[3];
+pthread_mutex_t lock_casal_junto[3];
 bool raj_liberou = false;
 int primeiro_do_casal[3];
+bool casal_junto[3];
 
 
 //CLASSES
@@ -118,6 +120,9 @@ int prioridades(int idPessoa){
     case HOWARD:
       prior=SHELDON;
       break;
+    case BERNADETTE:
+      prior = SHELDON;
+      break;
     case LEONARD:
       prior=HOWARD;
       break;
@@ -129,6 +134,27 @@ int prioridades(int idPessoa){
       break;
     default:
       perror("Prioridade não encontrada!");
+  }
+  return prior;
+}
+
+int dependentes(int idPessoa){
+  int prior = -1;
+  switch(idPessoa){
+    case LEONARD:
+      prior=SHELDON;
+      break;
+    case SHELDON:
+      prior=HOWARD;
+      break;
+    case BERNADETTE:
+      prior = LEONARD;
+      break;
+    case HOWARD:
+      prior=LEONARD;
+      break;
+    default:
+      perror("Dependentes não encontrada!");
   }
   return prior;
 }
@@ -193,16 +219,28 @@ void trata_prioridades(Person pessoa){
 
     int id_primeiro_casal;
     int casal = casais(idPessoa);
+    int casal_prior;
+    int pessoa_dependente = dependentes(idPessoa);
+    int id_casal_pessoa_dependente = id_casal(pessoa_dependente);
 
     pthread_mutex_lock(&lock_p[casal]);
+    pthread_mutex_lock(&lock_casal_junto[id_casal_pessoa_dependente]);
     if(casal != -1){
+      if(!p[casal].getQuer_usar() and casal_junto[id_casal_pessoa_dependente]){
+          pthread_mutex_unlock(&lock_forno);
+          while(casal_junto[id_casal_pessoa_dependente])
+            sleep(1);
+          pthread_mutex_lock(&lock_forno);
+      }
+
       if(!p[casal].getQuer_usar()){
         pthread_mutex_lock(&lock_p[prior]);
-        int casal_prior = casais(prior);
+        casal_prior = casais(prior);
         pthread_mutex_lock(&lock_p[casal_prior]);
-        
+
         if(p[prior].getQuer_usar() or p[casal_prior].getQuer_usar()){
           pthread_mutex_unlock(&lock_forno);
+
 
           while(p[prior].getQuer_usar() and p[casal_prior].getQuer_usar()){
             pthread_mutex_unlock(&lock_p[prior]);
@@ -249,29 +287,38 @@ void trata_prioridades(Person pessoa){
       else
       {
         id_primeiro_casal = id_casal(idPessoa);
-        if(id_primeiro_casal != -1){
-          pthread_mutex_lock(&lock_primeiro_do_casal[id_primeiro_casal]);
-          if(primeiro_do_casal[id_primeiro_casal] != idPessoa)
-            while(p[casal].getQuer_usar())
-              pthread_cond_wait(&cond_p[casal], &lock_p[casal]);
-          
-          pthread_mutex_unlock(&lock_primeiro_do_casal[id_primeiro_casal]);
+        
+        pthread_mutex_lock(&lock_primeiro_do_casal[id_primeiro_casal]);
+        
+        if(primeiro_do_casal[id_primeiro_casal] != idPessoa){
+          pthread_mutex_unlock(&lock_forno);
+
+          while(p[casal].getQuer_usar())
+            pthread_cond_wait(&cond_p[casal], &lock_p[casal]);
+
+          pthread_mutex_lock(&lock_forno);
         }
+        
+        pthread_mutex_unlock(&lock_primeiro_do_casal[id_primeiro_casal]);
+        
       }
     }
     pthread_mutex_lock(&lock_cout);
     cout << pessoa.getName() << " começa a esquentar algo" << "\n";
     pthread_mutex_unlock(&lock_cout);
-    if(!p[casal].getQuer_usar() and (casal != -1))
-      pthread_mutex_unlock(&lock_p[prior]);
+    
+    if(!p[casal].getQuer_usar() and (casal != -1)){
+      pthread_mutex_unlock(&lock_p[prior]); 
+      pthread_mutex_unlock(&lock_p[casal_prior]);
+    }
     pthread_mutex_unlock(&lock_p[casal]);
+    pthread_mutex_unlock(&lock_casal_junto[id_casal_pessoa_dependente]);
 
     id_primeiro_casal = id_casal(idPessoa);
-    if(id_primeiro_casal != -1){
-      pthread_mutex_lock(&lock_primeiro_do_casal[id_primeiro_casal]);
-      primeiro_do_casal[id_primeiro_casal] = -1;
-      pthread_mutex_unlock(&lock_primeiro_do_casal[id_primeiro_casal]);
-    }
+    
+    pthread_mutex_lock(&lock_primeiro_do_casal[id_primeiro_casal]);
+    primeiro_do_casal[id_primeiro_casal] = -1;
+    pthread_mutex_unlock(&lock_primeiro_do_casal[id_primeiro_casal]);
   }
   else
   if((prior == STUART) or (prior == KRIPKE)){
@@ -293,27 +340,30 @@ void trata_prioridades(Person pessoa){
 
     pthread_mutex_lock(&lock_p[SHELDON]);
     pthread_mutex_lock(&lock_p[HOWARD]);
-    pthread_mutex_lock(&lock_p[LEONARD]);  
+    pthread_mutex_lock(&lock_p[LEONARD]);
+    pthread_mutex_lock(&lock_p[BERNADETTE]);  
     if(p[SHELDON].getQuer_usar() or p[HOWARD].getQuer_usar() or p[LEONARD].getQuer_usar()){
       cout << "--------------------------------------" << pessoa.getName() << ": Algum dos 3 quer usar o forno " << "\n";
       pthread_mutex_unlock(&lock_forno);
 
       //os 3 querem usar(espera o Raj resolver a situação)
-      while(p[SHELDON].getQuer_usar() and p[HOWARD].getQuer_usar() and p[LEONARD].getQuer_usar()){
+      while(p[SHELDON].getQuer_usar() and (p[HOWARD].getQuer_usar() or p[BERNADETTE].getQuer_usar()) and p[LEONARD].getQuer_usar()){
         pthread_mutex_unlock(&lock_p[SHELDON]);
         pthread_mutex_unlock(&lock_p[HOWARD]);
         pthread_mutex_unlock(&lock_p[LEONARD]);
+        pthread_mutex_unlock(&lock_p[BERNADETTE]);
 
         sleep(1);
 
         pthread_mutex_lock(&lock_p[SHELDON]);
         pthread_mutex_lock(&lock_p[HOWARD]);
         pthread_mutex_lock(&lock_p[LEONARD]);
+        pthread_mutex_lock(&lock_p[BERNADETTE]);
       }
       cout << "--------------------------------------" << pessoa.getName() << ": Saimos do deadlock ou nao teve deadlock " << "\n";
-      //um par quer usar
-      while(p[SHELDON].getQuer_usar() and p[HOWARD].getQuer_usar()){
-        cout << "--------------------------------------" << pessoa.getName() << ": Par Sheldon e Howard " << "\n";
+      //um par de dependências quer usar
+      while(p[SHELDON].getQuer_usar() and (p[HOWARD].getQuer_usar() or p[BERNADETTE].getQuer_usar())){
+        cout << "--------------------------------------" << pessoa.getName() << ": Par Sheldon e (Howard e/ou bernadette) " << "\n";
         pthread_mutex_unlock(&lock_p[SHELDON]);
 
         sleep(1);
@@ -321,30 +371,46 @@ void trata_prioridades(Person pessoa){
         pthread_mutex_lock(&lock_p[SHELDON]);
       }
 
-      while(p[HOWARD].getQuer_usar() and p[LEONARD].getQuer_usar()){
-        cout << "--------------------------------------" << pessoa.getName() << ": Par Howard e Leonard " << "\n";
+      while((p[HOWARD].getQuer_usar() or p[BERNADETTE].getQuer_usar()) and p[LEONARD].getQuer_usar()){
+        cout << "--------------------------------------" << pessoa.getName() << ": Par (Howard e/ou bernadette) e Leonard " << "\n";
         pthread_mutex_unlock(&lock_p[HOWARD]);
+        pthread_mutex_unlock(&lock_p[BERNADETTE]);
 
         sleep(1);
 
         pthread_mutex_lock(&lock_p[HOWARD]);
+        pthread_mutex_lock(&lock_p[BERNADETTE]);
       }
  
-      while(p[LEONARD].getQuer_usar() and p[SHELDON].getQuer_usar()){//Leonard eventualmente conseguirá o seu lock
+      while(p[LEONARD].getQuer_usar() and p[SHELDON].getQuer_usar()){
         cout << "--------------------------------------" << pessoa.getName() << ": Par Leonard e Sheldon " << "\n";
-        pthread_mutex_unlock(&lock_p[LEONARD]);                      //após isto, ele irá liberar o forno e enviar um sinal para quem o espera
-                                                                     //Por enquanto, Sheldon será com certeza a pessoa que recebe esse sinal e ganha o lock
-        sleep(1);                                                    //Sheldon irá esquentar algo no forno, mas precisa do seu lock para liberar o forno         
-                                                                     //Esta situação se repete em todos os whiles de pares
+        pthread_mutex_unlock(&lock_p[LEONARD]);                      
+                                                                     
+        sleep(1);                                                            
+                                                                     
         pthread_mutex_lock(&lock_p[LEONARD]);                             
       }                                                              
       
-      // um dos 3 quer usar
+      //um dos casais querendo usar
+      while(p[HOWARD].getQuer_usar() and p[BERNADETTE].getQuer_usar()){
+        pthread_mutex_unlock(&lock_p[HOWARD]);
+        pthread_mutex_unlock(&lock_p[BERNADETTE]);
+
+        sleep(1);
+
+        pthread_mutex_lock(&lock_p[HOWARD]);
+        pthread_mutex_lock(&lock_p[BERNADETTE]);
+      }
+
+      // um dos 6 quer usar
       while(p[SHELDON].getQuer_usar())
         pthread_cond_wait(&cond_p[SHELDON], &lock_p[SHELDON]);
-
+      
       while(p[HOWARD].getQuer_usar())
         pthread_cond_wait(&cond_p[HOWARD], &lock_p[HOWARD]);
+
+      while(p[BERNADETTE].getQuer_usar())
+        pthread_cond_wait(&cond_p[BERNADETTE], &lock_p[BERNADETTE]);  
 
       while(p[LEONARD].getQuer_usar())
         pthread_cond_wait(&cond_p[LEONARD], &lock_p[LEONARD]);
@@ -358,6 +424,7 @@ void trata_prioridades(Person pessoa){
     pthread_mutex_unlock(&lock_p[SHELDON]);
     pthread_mutex_unlock(&lock_p[HOWARD]);
     pthread_mutex_unlock(&lock_p[LEONARD]);
+    pthread_mutex_unlock(&lock_p[BERNADETTE]);
     if(prior == KRIPKE)
       pthread_mutex_unlock(&lock_p[STUART]);
   }
@@ -372,11 +439,26 @@ class Microwave {
     void wait(Person &pessoa){
       pthread_mutex_lock(&lock_p[pessoa.getId()]);
       pessoa.setQuer_usar(true);
-      pthread_mutex_unlock(&lock_p[pessoa.getId()]);
+
+      int casal = casais(pessoa.getId());
+      if(casal != -1){
+        pthread_mutex_lock(&lock_p[casal]);
+
+        if(p[casal].getQuer_usar()){
+          int id_casal_junto = id_casal(casal);
+          pthread_mutex_lock(&lock_casal_junto[id_casal_junto]);
+          casal_junto[id_casal_junto] = true;
+          pthread_mutex_unlock(&lock_casal_junto[id_casal_junto]);
+        }
+
+        pthread_mutex_unlock(&lock_p[casal]);
+      }
 
       pthread_mutex_lock(&lock_cout);
       cout << pessoa.getName() << " quer usar o forno." << "\n";
       pthread_mutex_unlock(&lock_cout);
+
+      pthread_mutex_unlock(&lock_p[pessoa.getId()]);
    
       int id_primeiro_casal = id_casal(pessoa.getId());
       
@@ -393,6 +475,12 @@ class Microwave {
     void release(Person &pessoa){
       pthread_mutex_lock(&lock_p[pessoa.getId()]);
       pessoa.setQuer_usar(false);
+      
+      int id_casal_junto = id_casal(pessoa.getId());
+      pthread_mutex_lock(&lock_casal_junto[id_casal_junto]);
+      casal_junto[id_casal_junto] = false;
+      pthread_mutex_unlock(&lock_casal_junto[id_casal_junto]);
+
       pthread_cond_broadcast(&cond_p[pessoa.getId()]);
       pthread_mutex_unlock(&lock_p[pessoa.getId()]);
 
@@ -407,10 +495,18 @@ class Microwave {
       pthread_mutex_lock(&lock_p[SHELDON]);
       pthread_mutex_lock(&lock_p[HOWARD]);
       pthread_mutex_lock(&lock_p[LEONARD]);
-      if(p[SHELDON].getQuer_usar() and p[HOWARD].getQuer_usar() and p[LEONARD].getQuer_usar()){
+      pthread_mutex_lock(&lock_p[BERNADETTE]);
+      if(p[SHELDON].getQuer_usar() and (p[HOWARD].getQuer_usar() or p[BERNADETTE].getQuer_usar()) and p[LEONARD].getQuer_usar()){
+        
         srand48(time(NULL));
-        int nmr_pessoa = drand48 () * 2;
-        int prior = prioridades(nmr_pessoa);
+        int nmr_pessoa;
+        int prior;
+        int casal_prior;
+        
+        nmr_pessoa = drand48 () * 2;
+        prior = prioridades(nmr_pessoa);
+        //casal_prior = 
+
 
         if(prior!=-1){
           pthread_mutex_lock(&lock_raj_liberou);
@@ -425,6 +521,7 @@ class Microwave {
       pthread_mutex_unlock(&lock_p[SHELDON]);
       pthread_mutex_unlock(&lock_p[HOWARD]);
       pthread_mutex_unlock(&lock_p[LEONARD]);
+      pthread_mutex_unlock(&lock_p[BERNADETTE]);
     }
 };
 
@@ -491,7 +588,9 @@ int main (int argc, char * argv []){
 
     for(i = 0; i < 3; i++)
       primeiro_do_casal[i] = -1;
-    
+
+    for(i = 0; i < 3; i++)
+      casal_junto[i] = false;
 
     pthread_t* thread_handles;
 
@@ -537,6 +636,13 @@ int main (int argc, char * argv []){
       }
     }
 
+    for(i= 0; i < 3; i++){
+      if (pthread_mutex_init(&lock_casal_junto[i], NULL) != 0) {
+        perror("\nMutex lock_casal_junto init has failed");
+        return 1;
+      }
+    }
+
     thread_handles = (pthread_t*) malloc (NTHREADS*sizeof(pthread_t));
 
     for (thread = 0; thread < NTHREADS; thread++){
@@ -557,6 +663,7 @@ int main (int argc, char * argv []){
 
     for(i= 0; i < 3; i++){
       pthread_mutex_destroy(&lock_primeiro_do_casal[i]);
+      pthread_mutex_destroy(&lock_casal_junto[i]);
     }
 
     pthread_mutex_destroy(&lock_forno);
