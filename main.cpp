@@ -214,219 +214,552 @@ void trata_prioridades(Person pessoa){
   int prior = prioridades(idPessoa);
   //cout << "--------------------------------------" << pessoa.getName() << ": Seu prior é: " << p[prior].getName() << "\n";
   if((prior!= -1) and (prior != STUART) and (prior != KRIPKE)){
-    //tranca o forno
-    pthread_mutex_lock(&lock_forno);
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////   
+    /*
+    SIGNAL GARANTE A ORDEM DE EXECUÇÃO, USE SIGNAL E DÊ OS SINAIS ANTES DOS ULTIMOS UNLOCKS DO WAIT
+    MANTENHA A ORDEM DOS LOCKS, PARA GARANTIR QUE NAO TENHA DEADLOCK POR CAUSA DELES
+    DE UM SIGNAL ANTES DE DESTRANCAR AS VARIAVEIS NO FIM DO LOOP ETERNO
+    - Toda vez que eu executo esta função, eu quero saber se eu posso usar o forno neste exato instante da fila, o que requer verificar todos menos RAJ, STUART e KRIPKE.
+    - Eu deveria lockar todo mundo que eu preciso de uma vez, pois assim, eu consigo verificar a fila neste exato instante.
+    - Após o lock, eu verifico tudo e espero quem eu precisar(para esperar quem eu preciso, será necessário dar unlock em todos os outros, o que muda o instante verificado).
+    - A idéia é que, se todo mundo der unlock nos outros antes de esperar, eventualmente a pessoa que deve usar o forno vai pegar todos os locks,
+      verificar que ele não precisa esperar ninguém e vai, enfim usar o forno(que é onde ele vai enviar o sinal e tirar alguém do wait).
+    - Pela idéia acima, a gente sabe que as outras threads que pegarem os locks, ou vão só liberar geral(caso do Raj) ou vão esperar alguém.
+    - Ao fim das possíveis esperas, verificar se você pode realmente usar o forno(pq alguns unlocks podem ter sido feito, mudando o instante verificado), se não puder
+      repita o processo.(A idéia aqui é que você só para de esperar se, no instante em que você deu lock em todas as pessoas, é a sua vez)
+    */
+    
+    
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    if(idPessoa != SHELDON)
+      pthread_mutex_lock(&lock_p[SHELDON]);
+    if(idPessoa != HOWARD)
+      pthread_mutex_lock(&lock_p[HOWARD]);
+    if(idPessoa != LEONARD)
+      pthread_mutex_lock(&lock_p[LEONARD]);
+    if(idPessoa != BERNADETTE)
+      pthread_mutex_lock(&lock_p[BERNADETTE]);
+    if(idPessoa != PENNY)
+      pthread_mutex_lock(&lock_p[PENNY]);
+    if(idPessoa != AMY)
+      pthread_mutex_lock(&lock_p[AMY]);
+    while(1){
+      int casal = casais(idPessoa);
+      int pessoa_dependente = dependentes(idPessoa);
+      int casal_pessoa_dependente = casal(pessoa_dependente);
+      int casal_prior = casal(prior);
+      int id_casal_pessoa = id_casal(idPessoa);
 
-    int id_primeiro_casal;
-    int casal = casais(idPessoa);
-    int casal_prior;
-    int pessoa_dependente = dependentes(idPessoa);
-    int id_casal_pessoa_dependente = id_casal(pessoa_dependente);
+      if(!p[casal].getQuer_usar()){//caso eu não tenha casal na fila
+        if(p[pessoa_dependente].getQuer_usar() and p[casal_pessoa_dependente].getQuer_usar()){//se o casal que depende de mim estiver na fila, esperar eles
+          while(p[pessoa_dependente].getQuer_usar()){//espero a pessoa que depende de mim
+            //se o raj liberou, ignore o while
+            pthread_mutex_lock(&lock_raj_liberou);
+            if(raj_liberou){
+              raj_liberou = false;
+              pthread_mutex_unlock(&lock_raj_liberou);
+              break;
+            }
+            else
+              pthread_mutex_unlock(&lock_raj_liberou);
 
-    pthread_mutex_lock(&lock_p[casal]);
-    pthread_mutex_lock(&lock_casal_junto[id_casal_pessoa_dependente]);
-    if(casal != -1){
-      if(!p[casal].getQuer_usar() and casal_junto[id_casal_pessoa_dependente]){
-          pthread_mutex_unlock(&lock_forno);
-          while(casal_junto[id_casal_pessoa_dependente])
-            sleep(1);
-          pthread_mutex_lock(&lock_forno);
+            if((idPessoa != SHELDON) and (pessoa_dependente != SHELDON))
+              pthread_mutex_unlock(&lock_p[SHELDON]);
+            if((idPessoa != HOWARD) and (pessoa_dependente != HOWARD))
+              pthread_mutex_unlock(&lock_p[HOWARD]);
+            if((idPessoa != LEONARD) and (pessoa_dependente != LEONARD))
+              pthread_mutex_unlock(&lock_p[LEONARD]);
+            if((idPessoa != BERNADETTE) and (pessoa_dependente != BERNADETTE))
+              pthread_mutex_unlock(&lock_p[BERNADETTE]);
+            if((idPessoa != PENNY) and (pessoa_dependente != PENNY))
+              pthread_mutex_unlock(&lock_p[PENNY]);
+            if((idPessoa != AMY) and (pessoa_dependente != AMY))
+              pthread_mutex_unlock(&lock_p[AMY]);
+
+            pthread_cond_wait(&cond_p[pessoa_dependente], &lock_p[pessoa_dependente]);
+            pthread_mutex_unlock(&lock_p[pessoa_dependente]);
+
+            if(idPessoa != SHELDON)
+              pthread_mutex_lock(&lock_p[SHELDON]);
+            if(idPessoa != HOWARD)
+              pthread_mutex_lock(&lock_p[HOWARD]);
+            if(idPessoa != LEONARD)
+              pthread_mutex_lock(&lock_p[LEONARD]);
+            if(idPessoa != BERNADETTE)
+              pthread_mutex_lock(&lock_p[BERNADETTE]);
+            if(idPessoa != PENNY)
+              pthread_mutex_lock(&lock_p[PENNY]);
+            if(idPessoa != AMY)
+              pthread_mutex_lock(&lock_p[AMY]);
+          }
+
+          while(p[casal_pessoa_dependente].getQuer_usar()){//espero o casal da pessoa que depende de mim
+            //se o raj liberou, ignore o while
+            pthread_mutex_lock(&lock_raj_liberou);
+            if(raj_liberou){
+              raj_liberou = false;
+              pthread_mutex_unlock(&lock_raj_liberou);
+              break;
+            }
+            else
+              pthread_mutex_unlock(&lock_raj_liberou);
+
+            if((idPessoa != SHELDON) and (casal_pessoa_dependente != SHELDON))
+              pthread_mutex_unlock(&lock_p[SHELDON]);
+            if((idPessoa != HOWARD) and (casal_pessoa_dependente != HOWARD))
+              pthread_mutex_unlock(&lock_p[HOWARD]);
+            if((idPessoa != LEONARD) and (casal_pessoa_dependente != LEONARD))
+              pthread_mutex_unlock(&lock_p[LEONARD]);
+            if((idPessoa != BERNADETTE) and (casal_pessoa_dependente != BERNADETTE))
+              pthread_mutex_unlock(&lock_p[BERNADETTE]);
+            if((idPessoa != PENNY) and (casal_pessoa_dependente != PENNY))
+              pthread_mutex_unlock(&lock_p[PENNY]);
+            if((idPessoa != AMY) and (casal_pessoa_dependente != AMY))
+              pthread_mutex_unlock(&lock_p[AMY]);
+
+            pthread_cond_wait(&cond_p[casal_pessoa_dependente], &lock_p[casal_pessoa_dependente]);
+            pthread_mutex_unlock(&lock_p[casal_pessoa_dependente]);
+
+            if(idPessoa != SHELDON)
+              pthread_mutex_lock(&lock_p[SHELDON]);
+            if(idPessoa != HOWARD)
+              pthread_mutex_lock(&lock_p[HOWARD]);
+            if(idPessoa != LEONARD)
+              pthread_mutex_lock(&lock_p[LEONARD]);
+            if(idPessoa != BERNADETTE)
+              pthread_mutex_lock(&lock_p[BERNADETTE]);
+            if(idPessoa != PENNY)
+              pthread_mutex_lock(&lock_p[PENNY]);
+            if(idPessoa != AMY)
+              pthread_mutex_lock(&lock_p[AMY]);
+          }
+        }
+
+        while(p[prior].getQuer_usar()){//espero a pessoa que tem prioridade sobre mim
+          //se o raj liberou, ignore o while
+          pthread_mutex_lock(&lock_raj_liberou);
+          if(raj_liberou){
+            raj_liberou = false;
+            pthread_mutex_unlock(&lock_raj_liberou);
+            break;
+          }
+          else
+            pthread_mutex_unlock(&lock_raj_liberou);
+
+          if((idPessoa != SHELDON) and (prior != SHELDON))
+            pthread_mutex_unlock(&lock_p[SHELDON]);
+          if((idPessoa != HOWARD) and (prior != HOWARD))
+            pthread_mutex_unlock(&lock_p[HOWARD]);
+          if((idPessoa != LEONARD) and (prior != LEONARD))
+            pthread_mutex_unlock(&lock_p[LEONARD]);
+          if((idPessoa != BERNADETTE) and (prior != BERNADETTE))
+            pthread_mutex_unlock(&lock_p[BERNADETTE]);
+          if((idPessoa != PENNY) and (prior != PENNY))
+            pthread_mutex_unlock(&lock_p[PENNY]);
+          if((idPessoa != AMY) and (prior != AMY))
+            pthread_mutex_unlock(&lock_p[AMY]);
+
+          pthread_cond_wait(&cond_p[prior], &lock_p[prior]);
+          pthread_mutex_unlock(&lock_p[prior]);
+
+          if(idPessoa != SHELDON)
+            pthread_mutex_lock(&lock_p[SHELDON]);
+          if(idPessoa != HOWARD)
+            pthread_mutex_lock(&lock_p[HOWARD]);
+          if(idPessoa != LEONARD)
+            pthread_mutex_lock(&lock_p[LEONARD]);
+          if(idPessoa != BERNADETTE)
+            pthread_mutex_lock(&lock_p[BERNADETTE]);
+          if(idPessoa != PENNY)
+            pthread_mutex_lock(&lock_p[PENNY]);
+          if(idPessoa != AMY)
+            pthread_mutex_lock(&lock_p[AMY]);
+        }
+
+        while(p[casal_prior].getQuer_usar()){//espero o casal da pessoa que tem prioridade sobre mim
+          //se o raj liberou, ignore o while
+          pthread_mutex_lock(&lock_raj_liberou);
+          if(raj_liberou){
+            raj_liberou = false;
+            pthread_mutex_unlock(&lock_raj_liberou);
+            break;
+          }
+          else
+            pthread_mutex_unlock(&lock_raj_liberou);
+
+          if((idPessoa != SHELDON) and (casal_prior != SHELDON))
+            pthread_mutex_unlock(&lock_p[SHELDON]);
+          if((idPessoa != HOWARD) and (casal_prior != HOWARD))
+            pthread_mutex_unlock(&lock_p[HOWARD]);
+          if((idPessoa != LEONARD) and (casal_prior != LEONARD))
+            pthread_mutex_unlock(&lock_p[LEONARD]);
+          if((idPessoa != BERNADETTE) and (casal_prior != BERNADETTE))
+            pthread_mutex_unlock(&lock_p[BERNADETTE]);
+          if((idPessoa != PENNY) and (casal_prior != PENNY))
+            pthread_mutex_unlock(&lock_p[PENNY]);
+          if((idPessoa != AMY) and (casal_prior != AMY))
+            pthread_mutex_unlock(&lock_p[AMY]);
+
+          pthread_cond_wait(&cond_p[casal_prior], &lock_p[casal_prior]);
+          pthread_mutex_unlock(&lock_p[casal_prior]);
+
+          if(idPessoa != SHELDON)
+            pthread_mutex_lock(&lock_p[SHELDON]);
+          if(idPessoa != HOWARD)
+            pthread_mutex_lock(&lock_p[HOWARD]);
+          if(idPessoa != LEONARD)
+            pthread_mutex_lock(&lock_p[LEONARD]);
+          if(idPessoa != BERNADETTE)
+            pthread_mutex_lock(&lock_p[BERNADETTE]);
+          if(idPessoa != PENNY)
+            pthread_mutex_lock(&lock_p[PENNY]);
+          if(idPessoa != AMY)
+            pthread_mutex_lock(&lock_p[AMY]);
+        }
       }
+      else{//se eu tiver casal na fila
+        //verifico se o meu casal vai primeiro, caso verdadeiro, espero
+        pthread_mutex_lock(&lock_primeiro_do_casal[id_casal_pessoa]);
+        if(primeiro_do_casal[id_casal_pessoa] == casal){
+          pthread_mutex_unlock(&lock_primeiro_do_casal[id_casal_pessoa]);
+          while(p[casal].getQuer_usar()){//espero meu casal
+            //se o raj liberou, ignore o while
+            pthread_mutex_lock(&lock_raj_liberou);
+            if(raj_liberou){
+              raj_liberou = false;
+              pthread_mutex_unlock(&lock_raj_liberou);
+              break;
+            }
+            else
+              pthread_mutex_unlock(&lock_raj_liberou);
 
-      if(!p[casal].getQuer_usar()){
-        pthread_mutex_lock(&lock_p[prior]);
-        casal_prior = casais(prior);
-        pthread_mutex_lock(&lock_p[casal_prior]);
+            if((idPessoa != SHELDON) and (casal != SHELDON))
+              pthread_mutex_unlock(&lock_p[SHELDON]);
+            if((idPessoa != HOWARD) and (casal != HOWARD))
+              pthread_mutex_unlock(&lock_p[HOWARD]);
+            if((idPessoa != LEONARD) and (casal != LEONARD))
+              pthread_mutex_unlock(&lock_p[LEONARD]);
+            if((idPessoa != BERNADETTE) and (casal != BERNADETTE))
+              pthread_mutex_unlock(&lock_p[BERNADETTE]);
+            if((idPessoa != PENNY) and (casal != PENNY))
+              pthread_mutex_unlock(&lock_p[PENNY]);
+            if((idPessoa != AMY) and (casal != AMY))
+              pthread_mutex_unlock(&lock_p[AMY]);
 
-        if(p[prior].getQuer_usar() or p[casal_prior].getQuer_usar()){
-          pthread_mutex_unlock(&lock_forno);
+            pthread_cond_wait(&cond_p[casal], &lock_p[casal]);
+            pthread_mutex_unlock(&lock_p[casal]);
 
+            if(idPessoa != SHELDON)
+              pthread_mutex_lock(&lock_p[SHELDON]);
+            if(idPessoa != HOWARD)
+              pthread_mutex_lock(&lock_p[HOWARD]);
+            if(idPessoa != LEONARD)
+              pthread_mutex_lock(&lock_p[LEONARD]);
+            if(idPessoa != BERNADETTE)
+              pthread_mutex_lock(&lock_p[BERNADETTE]);
+            if(idPessoa != PENNY)
+              pthread_mutex_lock(&lock_p[PENNY]);
+            if(idPessoa != AMY)
+              pthread_mutex_lock(&lock_p[AMY]);
+          }
+        }
 
-          while(p[prior].getQuer_usar() and p[casal_prior].getQuer_usar()){
+        if(p[prior].getQuer_usar() and p[casal_prior].getQuer_usar()){//se a pessoa com prioridade sobre mim esta com o seu casal, espero os dois
+          while(p[prior].getQuer_usar()){//espero a pessoa com prioridade sobre mim
+            //se o raj liberou, ignore o while
+            pthread_mutex_lock(&lock_raj_liberou);
+            if(raj_liberou){
+              raj_liberou = false;
+              pthread_mutex_unlock(&lock_raj_liberou);
+              break;
+            }
+            else
+              pthread_mutex_unlock(&lock_raj_liberou);
+
+            if((idPessoa != SHELDON) and (prior != SHELDON))
+              pthread_mutex_unlock(&lock_p[SHELDON]);
+            if((idPessoa != HOWARD) and (prior != HOWARD))
+              pthread_mutex_unlock(&lock_p[HOWARD]);
+            if((idPessoa != LEONARD) and (prior != LEONARD))
+              pthread_mutex_unlock(&lock_p[LEONARD]);
+            if((idPessoa != BERNADETTE) and (prior != BERNADETTE))
+              pthread_mutex_unlock(&lock_p[BERNADETTE]);
+            if((idPessoa != PENNY) and (prior != PENNY))
+              pthread_mutex_unlock(&lock_p[PENNY]);
+            if((idPessoa != AMY) and (prior != AMY))
+              pthread_mutex_unlock(&lock_p[AMY]);
+
+            pthread_cond_wait(&cond_p[prior], &lock_p[prior]);
             pthread_mutex_unlock(&lock_p[prior]);
+
+            if(idPessoa != SHELDON)
+              pthread_mutex_lock(&lock_p[SHELDON]);
+            if(idPessoa != HOWARD)
+              pthread_mutex_lock(&lock_p[HOWARD]);
+            if(idPessoa != LEONARD)
+              pthread_mutex_lock(&lock_p[LEONARD]);
+            if(idPessoa != BERNADETTE)
+              pthread_mutex_lock(&lock_p[BERNADETTE]);
+            if(idPessoa != PENNY)
+              pthread_mutex_lock(&lock_p[PENNY]);
+            if(idPessoa != AMY)
+              pthread_mutex_lock(&lock_p[AMY]);
+          }
+
+          while(p[casal_prior].getQuer_usar()){//espero o casal da pessoa com prioridade sobre mim
+            //se o raj liberou, ignore o while
+            pthread_mutex_lock(&lock_raj_liberou);
+            if(raj_liberou){
+              raj_liberou = false;
+              pthread_mutex_unlock(&lock_raj_liberou);
+              break;
+            }
+            else
+              pthread_mutex_unlock(&lock_raj_liberou);
+
+            if((idPessoa != SHELDON) and (casal_prior != SHELDON))
+              pthread_mutex_unlock(&lock_p[SHELDON]);
+            if((idPessoa != HOWARD) and (casal_prior != HOWARD))
+              pthread_mutex_unlock(&lock_p[HOWARD]);
+            if((idPessoa != LEONARD) and (casal_prior != LEONARD))
+              pthread_mutex_unlock(&lock_p[LEONARD]);
+            if((idPessoa != BERNADETTE) and (casal_prior != BERNADETTE))
+              pthread_mutex_unlock(&lock_p[BERNADETTE]);
+            if((idPessoa != PENNY) and (casal_prior != PENNY))
+              pthread_mutex_unlock(&lock_p[PENNY]);
+            if((idPessoa != AMY) and (casal_prior != AMY))
+              pthread_mutex_unlock(&lock_p[AMY]);
+
+            pthread_cond_wait(&cond_p[casal_prior], &lock_p[casal_prior]);
             pthread_mutex_unlock(&lock_p[casal_prior]);
 
-            sleep(1);
-
-            pthread_mutex_lock(&lock_p[prior]);
-            pthread_mutex_lock(&lock_p[casal_prior]);
+            if(idPessoa != SHELDON)
+              pthread_mutex_lock(&lock_p[SHELDON]);
+            if(idPessoa != HOWARD)
+              pthread_mutex_lock(&lock_p[HOWARD]);
+            if(idPessoa != LEONARD)
+              pthread_mutex_lock(&lock_p[LEONARD]);
+            if(idPessoa != BERNADETTE)
+              pthread_mutex_lock(&lock_p[BERNADETTE]);
+            if(idPessoa != PENNY)
+              pthread_mutex_lock(&lock_p[PENNY]);
+            if(idPessoa != AMY)
+              pthread_mutex_lock(&lock_p[AMY]);
           }
-        
-          while(p[casal_prior].getQuer_usar()){
-            cout << "--------------------------------------" << pessoa.getName() << ": Esta esperando " << p[casal_prior].getName() << "\n";
-            pthread_cond_wait(&cond_p[casal_prior], &lock_p[casal_prior]);
-
-            pthread_mutex_lock(&lock_raj_liberou);
-            if(raj_liberou){
-              raj_liberou = false;
-              pthread_mutex_unlock(&lock_raj_liberou);
-              break;
-            }
-            else
-              pthread_mutex_unlock(&lock_raj_liberou);
-          }
-          
-          while(p[prior].getQuer_usar()){
-            cout << "--------------------------------------" << pessoa.getName() << ": Esta esperando " << p[prior].getName() << "\n";
-            pthread_cond_wait(&cond_p[prior], &lock_p[prior]);
-
-            pthread_mutex_lock(&lock_raj_liberou);
-            if(raj_liberou){
-              raj_liberou = false;
-              pthread_mutex_unlock(&lock_raj_liberou);
-              break;
-            }
-            else
-              pthread_mutex_unlock(&lock_raj_liberou);
-          }
-          cout << "--------------------------------------" << pessoa.getName() << ": Parou de esperar " << p[prior].getName() << "\n";
-          
-          pthread_mutex_lock(&lock_forno);
-        }  
-      }
-      else
-      {
-        id_primeiro_casal = id_casal(idPessoa);
-        
-        pthread_mutex_lock(&lock_primeiro_do_casal[id_primeiro_casal]);
-        
-        if(primeiro_do_casal[id_primeiro_casal] != idPessoa){
-          pthread_mutex_unlock(&lock_forno);
-
-          while(p[casal].getQuer_usar())
-            pthread_cond_wait(&cond_p[casal], &lock_p[casal]);
-
-          pthread_mutex_lock(&lock_forno);
         }
-        
-        pthread_mutex_unlock(&lock_primeiro_do_casal[id_primeiro_casal]);
-        
+      }
+
+      //verifico se eu posso usar o forno agora
+      pthread_mutex_lock(&lock_primeiro_do_casal[id_casal_pessoa]);
+      if(
+        raj_liberou
+        or (!p[casal].getQuer_usar() and !(p[pessoa_dependente].getQuer_usar() and p[casal_pessoa_dependente].getQuer_usar()) and !p[prior].getQuer_usar() and !p[casal_prior].getQuer_usar())
+        or (p[casal].getQuer_usar() and (primeiro_do_casal[id_casal_pessoa] == idPessoa) and !(p[prior].getQuer_usar() and p[casal_prior].getQuer_usar()))
+      ){
+        pthread_mutex_unlock(&lock_primeiro_do_casal[id_casal_pessoa]);
+
+        //tranca o forno
+        pthread_mutex_lock(&lock_forno); 
+
+        if(idPessoa != SHELDON){
+          pthread_cond_signal(&cond_p[SHELDON]);
+          pthread_mutex_unlock(&lock_p[SHELDON]);
+        }
+        if(idPessoa != HOWARD){
+          pthread_cond_signal(&cond_p[HOWARD]);
+          pthread_mutex_unlock(&lock_p[HOWARD]);
+        }
+        if(idPessoa != LEONARD){
+          pthread_cond_signal(&cond_p[LEONARD]);
+          pthread_mutex_unlock(&lock_p[LEONARD]);
+        }
+        if(idPessoa != BERNADETTE){
+          pthread_cond_signal(&cond_p[BERNADETTE]);
+          pthread_mutex_unlock(&lock_p[BERNADETTE]);
+        }
+        if(idPessoa != PENNY){
+          pthread_cond_signal(&cond_p[PENNY]);
+          pthread_mutex_unlock(&lock_p[PENNY]);
+        }
+        if(idPessoa != AMY){
+          pthread_cond_signal(&cond_p[AMY]);
+          pthread_mutex_unlock(&lock_p[AMY]);
+        }
+        break;
       }
     }
-    pthread_mutex_lock(&lock_cout);
-    cout << pessoa.getName() << " começa a esquentar algo" << "\n";
-    pthread_mutex_unlock(&lock_cout);
-    
-    if(!p[casal].getQuer_usar() and (casal != -1)){
-      pthread_mutex_unlock(&lock_p[prior]); 
-      pthread_mutex_unlock(&lock_p[casal_prior]);
-    }
-    pthread_mutex_unlock(&lock_p[casal]);
-    pthread_mutex_unlock(&lock_casal_junto[id_casal_pessoa_dependente]);
-
-    id_primeiro_casal = id_casal(idPessoa);
-    
-    pthread_mutex_lock(&lock_primeiro_do_casal[id_primeiro_casal]);
-    primeiro_do_casal[id_primeiro_casal] = -1;
-    pthread_mutex_unlock(&lock_primeiro_do_casal[id_primeiro_casal]);
   }
   else
   if((prior == STUART) or (prior == KRIPKE)){
     //tranca o forno
     pthread_mutex_lock(&lock_forno);
 
-    if(prior == KRIPKE){
-      pthread_mutex_lock(&lock_p[STUART]);
+    while(1){
+      pthread_mutex_lock(&lock_p[SHELDON]);
+      pthread_mutex_lock(&lock_p[HOWARD]);
+      pthread_mutex_lock(&lock_p[LEONARD]);
+      pthread_mutex_lock(&lock_p[BERNADETTE]);
+      pthread_mutex_lock(&lock_p[PENNY]);
+      pthread_mutex_lock(&lock_p[AMY]);
+      if(prior == KRIPKE){
+        pthread_mutex_lock(&lock_p[STUART]);
+        while(p[STUART].getQuer_usar()){
+          pthread_mutex_unlock(&lock_p[SHELDON]);
+          pthread_mutex_unlock(&lock_p[HOWARD]);
+          pthread_mutex_unlock(&lock_p[LEONARD]);
+          pthread_mutex_unlock(&lock_p[BERNADETTE]);
+          pthread_mutex_unlock(&lock_p[PENNY]);
+          pthread_mutex_unlock(&lock_p[AMY]);
 
-      if(p[STUART].getQuer_usar()){
-        pthread_mutex_unlock(&lock_forno);
-
-        while(p[STUART].getQuer_usar())
           pthread_cond_wait(&cond_p[STUART], &lock_p[STUART]);
 
-        pthread_mutex_lock(&lock_forno);
+          pthread_mutex_lock(&lock_p[SHELDON]);
+          pthread_mutex_lock(&lock_p[HOWARD]);
+          pthread_mutex_lock(&lock_p[LEONARD]);
+          pthread_mutex_lock(&lock_p[BERNADETTE]);
+          pthread_mutex_lock(&lock_p[PENNY]);
+          pthread_mutex_lock(&lock_p[AMY]);
+        }
       }
-    }
 
-    pthread_mutex_lock(&lock_p[SHELDON]);
-    pthread_mutex_lock(&lock_p[HOWARD]);
-    pthread_mutex_lock(&lock_p[LEONARD]);
-    pthread_mutex_lock(&lock_p[BERNADETTE]);  
-    if(p[SHELDON].getQuer_usar() or p[HOWARD].getQuer_usar() or p[LEONARD].getQuer_usar()){
-      cout << "--------------------------------------" << pessoa.getName() << ": Algum dos 3 quer usar o forno " << "\n";
-      pthread_mutex_unlock(&lock_forno);
-
-      //os 3 querem usar(espera o Raj resolver a situação)
-      while(p[SHELDON].getQuer_usar() and (p[HOWARD].getQuer_usar() or p[BERNADETTE].getQuer_usar()) and p[LEONARD].getQuer_usar()){
-        pthread_mutex_unlock(&lock_p[SHELDON]);
+      while(p[SHELDON].getQuer_usar()){
         pthread_mutex_unlock(&lock_p[HOWARD]);
         pthread_mutex_unlock(&lock_p[LEONARD]);
         pthread_mutex_unlock(&lock_p[BERNADETTE]);
+        pthread_mutex_unlock(&lock_p[PENNY]);
+        pthread_mutex_unlock(&lock_p[AMY]);
 
-        sleep(1);
+        pthread_cond_wait(&cond_p[SHELDON], &lock_p[SHELDON]);
+
+        pthread_mutex_lock(&lock_p[HOWARD]);
+        pthread_mutex_lock(&lock_p[LEONARD]);
+        pthread_mutex_lock(&lock_p[BERNADETTE]);
+        pthread_mutex_lock(&lock_p[PENNY]);
+        pthread_mutex_lock(&lock_p[AMY]);
+      }
+
+      while(p[HOWARD].getQuer_usar()){
+        pthread_mutex_unlock(&lock_p[SHELDON]);
+        pthread_mutex_unlock(&lock_p[LEONARD]);
+        pthread_mutex_unlock(&lock_p[BERNADETTE]);
+        pthread_mutex_unlock(&lock_p[PENNY]);
+        pthread_mutex_unlock(&lock_p[AMY]);
+
+        pthread_cond_wait(&cond_p[HOWARD], &lock_p[HOWARD]);
+        pthread_mutex_unlock(&lock_p[HOWARD]);
 
         pthread_mutex_lock(&lock_p[SHELDON]);
         pthread_mutex_lock(&lock_p[HOWARD]);
         pthread_mutex_lock(&lock_p[LEONARD]);
         pthread_mutex_lock(&lock_p[BERNADETTE]);
+        pthread_mutex_lock(&lock_p[PENNY]);
+        pthread_mutex_lock(&lock_p[AMY]);
       }
-      cout << "--------------------------------------" << pessoa.getName() << ": Saimos do deadlock ou nao teve deadlock " << "\n";
-      //um par de dependências quer usar
-      while(p[SHELDON].getQuer_usar() and (p[HOWARD].getQuer_usar() or p[BERNADETTE].getQuer_usar())){
-        cout << "--------------------------------------" << pessoa.getName() << ": Par Sheldon e (Howard e/ou bernadette) " << "\n";
-        pthread_mutex_unlock(&lock_p[SHELDON]);
 
-        sleep(1);
+      while(p[LEONARD].getQuer_usar()){
+        pthread_mutex_unlock(&lock_p[SHELDON]);
+        pthread_mutex_unlock(&lock_p[HOWARD]);
+        pthread_mutex_unlock(&lock_p[BERNADETTE]);
+        pthread_mutex_unlock(&lock_p[PENNY]);
+        pthread_mutex_unlock(&lock_p[AMY]);
+
+        pthread_cond_wait(&cond_p[LEONARD], &lock_p[LEONARD]);
+        pthread_mutex_unlock(&lock_p[LEONARD]);
 
         pthread_mutex_lock(&lock_p[SHELDON]);
+        pthread_mutex_lock(&lock_p[HOWARD]);
+        pthread_mutex_lock(&lock_p[LEONARD]);
+        pthread_mutex_lock(&lock_p[BERNADETTE]);
+        pthread_mutex_lock(&lock_p[PENNY]);
+        pthread_mutex_lock(&lock_p[AMY]);
       }
 
-      while((p[HOWARD].getQuer_usar() or p[BERNADETTE].getQuer_usar()) and p[LEONARD].getQuer_usar()){
-        cout << "--------------------------------------" << pessoa.getName() << ": Par (Howard e/ou bernadette) e Leonard " << "\n";
+      while(p[BERNADETTE].getQuer_usar()){
+        pthread_mutex_unlock(&lock_p[SHELDON]);
         pthread_mutex_unlock(&lock_p[HOWARD]);
+        pthread_mutex_unlock(&lock_p[LEONARD]);
+        pthread_mutex_unlock(&lock_p[PENNY]);
+        pthread_mutex_unlock(&lock_p[AMY]);
+
+        pthread_cond_wait(&cond_p[BERNADETTE], &lock_p[BERNADETTE]);
         pthread_mutex_unlock(&lock_p[BERNADETTE]);
 
-        sleep(1);
-
+        pthread_mutex_lock(&lock_p[SHELDON]);
         pthread_mutex_lock(&lock_p[HOWARD]);
+        pthread_mutex_lock(&lock_p[LEONARD]);
         pthread_mutex_lock(&lock_p[BERNADETTE]);
-      }
- 
-      while(p[LEONARD].getQuer_usar() and p[SHELDON].getQuer_usar()){
-        cout << "--------------------------------------" << pessoa.getName() << ": Par Leonard e Sheldon " << "\n";
-        pthread_mutex_unlock(&lock_p[LEONARD]);                      
-                                                                     
-        sleep(1);                                                            
-                                                                     
-        pthread_mutex_lock(&lock_p[LEONARD]);                             
-      }                                                              
-      
-      //um dos casais querendo usar
-      while(p[HOWARD].getQuer_usar() and p[BERNADETTE].getQuer_usar()){
-        pthread_mutex_unlock(&lock_p[HOWARD]);
-        pthread_mutex_unlock(&lock_p[BERNADETTE]);
-
-        sleep(1);
-
-        pthread_mutex_lock(&lock_p[HOWARD]);
-        pthread_mutex_lock(&lock_p[BERNADETTE]);
+        pthread_mutex_lock(&lock_p[PENNY]);
+        pthread_mutex_lock(&lock_p[AMY]);
       }
 
-      // um dos 6 quer usar
-      while(p[SHELDON].getQuer_usar())
-        pthread_cond_wait(&cond_p[SHELDON], &lock_p[SHELDON]);
-      
-      while(p[HOWARD].getQuer_usar())
-        pthread_cond_wait(&cond_p[HOWARD], &lock_p[HOWARD]);
+      while(p[PENNY].getQuer_usar()){
+          pthread_mutex_unlock(&lock_p[SHELDON]);
+          pthread_mutex_unlock(&lock_p[HOWARD]);
+          pthread_mutex_unlock(&lock_p[LEONARD]);
+          pthread_mutex_unlock(&lock_p[BERNADETTE]);
+          pthread_mutex_unlock(&lock_p[AMY]);
 
-      while(p[BERNADETTE].getQuer_usar())
-        pthread_cond_wait(&cond_p[BERNADETTE], &lock_p[BERNADETTE]);  
+          pthread_cond_wait(&cond_p[PENNY], &lock_p[PENNY]);
+          pthread_mutex_unlock(&lock_p[PENNY]);
 
-      while(p[LEONARD].getQuer_usar())
-        pthread_cond_wait(&cond_p[LEONARD], &lock_p[LEONARD]);
+          pthread_mutex_lock(&lock_p[SHELDON]);
+          pthread_mutex_lock(&lock_p[HOWARD]);
+          pthread_mutex_lock(&lock_p[LEONARD]);
+          pthread_mutex_lock(&lock_p[BERNADETTE]);
+          pthread_mutex_lock(&lock_p[PENNY]);
+          pthread_mutex_lock(&lock_p[AMY]);
+        }
 
-      pthread_mutex_lock(&lock_forno);
+        while(p[AMY].getQuer_usar()){
+          pthread_mutex_unlock(&lock_p[SHELDON]);
+          pthread_mutex_unlock(&lock_p[HOWARD]);
+          pthread_mutex_unlock(&lock_p[LEONARD]);
+          pthread_mutex_unlock(&lock_p[BERNADETTE]);
+          pthread_mutex_unlock(&lock_p[PENNY]);
+
+          pthread_cond_wait(&cond_p[AMY], &lock_p[AMY]);
+          pthread_mutex_unlock(&lock_p[AMY]);
+
+          pthread_mutex_lock(&lock_p[SHELDON]);
+          pthread_mutex_lock(&lock_p[HOWARD]);
+          pthread_mutex_lock(&lock_p[LEONARD]);
+          pthread_mutex_lock(&lock_p[BERNADETTE]);
+          pthread_mutex_lock(&lock_p[PENNY]);
+          pthread_mutex_lock(&lock_p[AMY]);
+        }
+
+        if(
+          ((prior == KRIPKE) and (!p[SHELDON].getQuer_usar() and !p[HOWARD].getQuer_usar() and !p[LEONARD].getQuer_usar() and !p[BERNADETTE].getQuer_usar() and !p[PENNY].getQuer_usar() and !p[AMY].getQuer_usar() and !p[STUART].getQuer_usar()))
+          or ((prior == STUART) and (!p[SHELDON].getQuer_usar() and !p[HOWARD].getQuer_usar() and !p[LEONARD].getQuer_usar() and !p[BERNADETTE].getQuer_usar() and !p[PENNY].getQuer_usar() and !p[AMY].getQuer_usar()))
+        ){
+          pthread_cond_signal(&cond_p[SHELDON]);
+          pthread_mutex_unlock(&lock_p[SHELDON]);
+
+          pthread_cond_signal(&cond_p[HOWARD]);
+          pthread_mutex_unlock(&lock_p[HOWARD]);
+
+          pthread_cond_signal(&cond_p[LEONARD]);
+          pthread_mutex_unlock(&lock_p[LEONARD]);
+
+          pthread_cond_signal(&cond_p[BERNADETTE]);
+          pthread_mutex_unlock(&lock_p[BERNADETTE]);
+
+          pthread_cond_signal(&cond_p[PENNY]);
+          pthread_mutex_unlock(&lock_p[PENNY]);
+
+          pthread_cond_signal(&cond_p[AMY]);
+          pthread_mutex_unlock(&lock_p[AMY]);
+
+          if(prior == KRIPKE){
+            pthread_mutex_unlock(&lock_p[STUART]);
+          }
+
+          break;
+        }      
+        
     }
-    pthread_mutex_lock(&lock_cout);
-    cout << pessoa.getName() << " começa a esquentar algo" << "\n";
-    pthread_mutex_unlock(&lock_cout);
-
-    pthread_mutex_unlock(&lock_p[SHELDON]);
-    pthread_mutex_unlock(&lock_p[HOWARD]);
-    pthread_mutex_unlock(&lock_p[LEONARD]);
-    pthread_mutex_unlock(&lock_p[BERNADETTE]);
-    if(prior == KRIPKE)
-      pthread_mutex_unlock(&lock_p[STUART]);
+                                                              
+  
   }
      
 }
@@ -440,7 +773,7 @@ class Microwave {
       pthread_mutex_lock(&lock_p[pessoa.getId()]);
       pessoa.setQuer_usar(true);
 
-      int casal = casais(pessoa.getId());
+      /*int casal = casais(pessoa.getId());
       if(casal != -1){
         pthread_mutex_lock(&lock_p[casal]);
 
@@ -452,22 +785,21 @@ class Microwave {
         }
 
         pthread_mutex_unlock(&lock_p[casal]);
-      }
+      }*/
 
       pthread_mutex_lock(&lock_cout);
       cout << pessoa.getName() << " quer usar o forno." << "\n";
       pthread_mutex_unlock(&lock_cout);
 
-      pthread_mutex_unlock(&lock_p[pessoa.getId()]);
-   
       int id_primeiro_casal = id_casal(pessoa.getId());
-      
       if(id_primeiro_casal != -1){
         pthread_mutex_lock(&lock_primeiro_do_casal[id_primeiro_casal]);
         if(primeiro_do_casal[id_primeiro_casal] == -1)
           primeiro_do_casal[id_primeiro_casal] = pessoa.getId();
         pthread_mutex_unlock(&lock_primeiro_do_casal[id_primeiro_casal]);
-      }      
+      }    
+
+      pthread_mutex_unlock(&lock_p[pessoa.getId()]);  
 
       trata_prioridades(pessoa);
     }
@@ -477,11 +809,15 @@ class Microwave {
       pessoa.setQuer_usar(false);
       
       int id_casal_junto = id_casal(pessoa.getId());
-      pthread_mutex_lock(&lock_casal_junto[id_casal_junto]);
+      /*pthread_mutex_lock(&lock_casal_junto[id_casal_junto]);
       casal_junto[id_casal_junto] = false;
-      pthread_mutex_unlock(&lock_casal_junto[id_casal_junto]);
+      pthread_mutex_unlock(&lock_casal_junto[id_casal_junto]);*/
 
-      pthread_cond_broadcast(&cond_p[pessoa.getId()]);
+      pthread_mutex_lock(&lock_primeiro_do_casal[id_casal_junto]);
+      primeiro_do_casal[id_casal_junto] = -1;
+      pthread_mutex_unlock(&lock_primeiro_do_casal[id_casal_junto]);
+
+      pthread_cond_signal(&cond_p[pessoa.getId()]);
       pthread_mutex_unlock(&lock_p[pessoa.getId()]);
 
       pthread_mutex_unlock(&lock_forno);
@@ -492,36 +828,120 @@ class Microwave {
     }
 
     void check(){
+      bool deadlock = false;
+      bool todos_casais = false;
+      int pessoas_deadlock[3];
+      srand48(time(NULL));
+      int nmr_aleatorio;
+
       pthread_mutex_lock(&lock_p[SHELDON]);
       pthread_mutex_lock(&lock_p[HOWARD]);
       pthread_mutex_lock(&lock_p[LEONARD]);
       pthread_mutex_lock(&lock_p[BERNADETTE]);
-      if(p[SHELDON].getQuer_usar() and (p[HOWARD].getQuer_usar() or p[BERNADETTE].getQuer_usar()) and p[LEONARD].getQuer_usar()){
-        
-        srand48(time(NULL));
-        int nmr_pessoa;
-        int prior;
-        int casal_prior;
-        
-        nmr_pessoa = drand48 () * 2;
-        prior = prioridades(nmr_pessoa);
-        //casal_prior = 
+      pthread_mutex_lock(&lock_p[PENNY]);
+      pthread_mutex_lock(&lock_p[AMY]);
 
-
-        if(prior!=-1){
-          pthread_mutex_lock(&lock_raj_liberou);
-          raj_liberou = true;
-          pthread_mutex_unlock(&lock_raj_liberou);
-          pthread_cond_broadcast(&cond_p[prior]); //liberando pessoa de acordo com numero sorteado
-          pthread_mutex_lock(&lock_cout);
-          cout << "Raj detectou um deadlock, liberando " << p[nmr_pessoa].getName() << "\n";
-          pthread_mutex_unlock(&lock_cout);
-        }
+      if(p[SHELDON].getQuer_usar() and p[AMY].getQuer_usar() and p[HOWARD].getQuer_usar() and p[BERNADETTE].getQuer_usar() and p[LEONARD].getQuer_usar() and p[PENNY].getQuer_usar()){
+        deadlock = true;
+        todos_casais = true;        
       }
+      else
+      if(p[SHELDON].getQuer_usar() and p[HOWARD].getQuer_usar() and p[LEONARD].getQuer_usar()){
+        pessoas_deadlock[0] = SHELDON;
+        pessoas_deadlock[1] = HOWARD;
+        pessoas_deadlock[2] = LEONARD;
+        
+        deadlock = true;
+      }
+      else
+      if(p[SHELDON].getQuer_usar() and p[BERNADETTE].getQuer_usar() and p[LEONARD].getQuer_usar()){
+        pessoas_deadlock[0] = SHELDON;
+        pessoas_deadlock[1] = BERNADETTE;
+        pessoas_deadlock[2] = LEONARD;
+        
+        deadlock = true;
+      }
+      else
+      if(p[AMY].getQuer_usar() and p[BERNADETTE].getQuer_usar() and p[LEONARD].getQuer_usar()){
+        pessoas_deadlock[0] = AMY;
+        pessoas_deadlock[1] = BERNADETTE;
+        pessoas_deadlock[2] = LEONARD;
+        
+        deadlock = true;
+      }
+      else
+      if(p[AMY].getQuer_usar() and p[HOWARD].getQuer_usar() and p[LEONARD].getQuer_usar()){
+        pessoas_deadlock[0] = AMY;
+        pessoas_deadlock[1] = HOWARD;
+        pessoas_deadlock[2] = LEONARD;
+        
+        deadlock = true;
+      }
+      else
+      if(p[SHELDON].getQuer_usar() and p[HOWARD].getQuer_usar() and p[PENNY].getQuer_usar()){
+        pessoas_deadlock[0] = SHELDON;
+        pessoas_deadlock[1] = HOWARD;
+        pessoas_deadlock[2] = PENNY;
+        
+        deadlock = true;
+      }
+      else
+      if(p[SHELDON].getQuer_usar() and p[BERNADETTE].getQuer_usar() and p[PENNY].getQuer_usar()){
+        pessoas_deadlock[0] = SHELDON;
+        pessoas_deadlock[1] = BERNADETTE;
+        pessoas_deadlock[2] = PENNY;
+        
+        deadlock = true;
+      }
+      else
+      if(p[AMY].getQuer_usar() and p[BERNADETTE].getQuer_usar() and p[PENNY].getQuer_usar()){
+        pessoas_deadlock[0] = AMY;
+        pessoas_deadlock[1] = BERNADETTE;
+        pessoas_deadlock[2] = PENNY;
+        
+        deadlock = true;
+      }
+      else
+      if(p[AMY].getQuer_usar() and p[HOWARD].getQuer_usar() and p[PENNY].getQuer_usar()){
+        pessoas_deadlock[0] = AMY;
+        pessoas_deadlock[1] = HOWARD;
+        pessoas_deadlock[2] = PENNY;
+        
+        deadlock = true;
+      }
+
+      //tratamento para casos de deadlock
+      if(deadlock and !todos_casais){
+        nmr_aleatorio = drand48 () * 2;
+
+        pthread_mutex_lock(&lock_raj_liberou);
+        raj_liberou = true;
+        pthread_mutex_unlock(&lock_raj_liberou);
+        pthread_cond_signal(&cond_p[pessoas_deadlock[nmr_aleatorio]]); 
+        
+        nmr_aleatorio++;
+        if(nmr_aleatorio == 3) 
+          nmr_aleatorio = 0;
+        pthread_mutex_lock(&lock_cout);
+        cout << "Raj detectou um deadlock, liberando " << p[pessoas_deadlock[nmr_aleatorio]].getName() << "\n";
+        pthread_mutex_unlock(&lock_cout);
+      }
+      else
+      if(deadlock and todos_casais){
+        nmr_aleatorio = drand48 () * 8;
+        if((nmr_aleatorio > 2) and (nmr_aleatorio < 6))
+          nmr_aleatorio += 3;
+
+        //se eu mando sinal de uma pessoa que é a primeira do casal, a outra pessoa do casal é liberada
+        //se eu mando sinal de uma pessoa que vai depois entre o casal, a primeira pessoa do casal que está esperando vai ser liberada  
+      }
+
       pthread_mutex_unlock(&lock_p[SHELDON]);
       pthread_mutex_unlock(&lock_p[HOWARD]);
       pthread_mutex_unlock(&lock_p[LEONARD]);
       pthread_mutex_unlock(&lock_p[BERNADETTE]);
+      pthread_mutex_unlock(&lock_p[PENNY]);
+      pthread_mutex_unlock(&lock_p[AMY]);
     }
 };
 
