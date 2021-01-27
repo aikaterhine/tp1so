@@ -256,6 +256,9 @@ void trata_prioridades(Person pessoa){
             //se o raj liberou, ignore o while
             pthread_mutex_lock(&lock_raj_liberou);
             if(raj_liberou){
+              pthread_mutex_lock(&lock_cout);
+              cout << "Raj detectou um deadlock, liberando " << pessoa.getName() << "\n";
+              pthread_mutex_unlock(&lock_cout);
               raj_liberou = false;
               pthread_mutex_unlock(&lock_raj_liberou);
               break;
@@ -297,6 +300,9 @@ void trata_prioridades(Person pessoa){
             //se o raj liberou, ignore o while
             pthread_mutex_lock(&lock_raj_liberou);
             if(raj_liberou){
+              pthread_mutex_lock(&lock_cout);
+              cout << "Raj detectou um deadlock, liberando " << pessoa.getName() << "\n";
+              pthread_mutex_unlock(&lock_cout);
               raj_liberou = false;
               pthread_mutex_unlock(&lock_raj_liberou);
               break;
@@ -339,6 +345,9 @@ void trata_prioridades(Person pessoa){
           //se o raj liberou, ignore o while
           pthread_mutex_lock(&lock_raj_liberou);
           if(raj_liberou){
+            pthread_mutex_lock(&lock_cout);
+            cout << "Raj detectou um deadlock, liberando " << pessoa.getName() << "\n";
+            pthread_mutex_unlock(&lock_cout);
             raj_liberou = false;
             pthread_mutex_unlock(&lock_raj_liberou);
             break;
@@ -380,6 +389,9 @@ void trata_prioridades(Person pessoa){
           //se o raj liberou, ignore o while
           pthread_mutex_lock(&lock_raj_liberou);
           if(raj_liberou){
+            pthread_mutex_lock(&lock_cout);
+            cout << "Raj detectou um deadlock, liberando " << pessoa.getName() << "\n";
+            pthread_mutex_unlock(&lock_cout);
             raj_liberou = false;
             pthread_mutex_unlock(&lock_raj_liberou);
             break;
@@ -426,6 +438,9 @@ void trata_prioridades(Person pessoa){
             //se o raj liberou, ignore o while
             pthread_mutex_lock(&lock_raj_liberou);
             if(raj_liberou){
+              pthread_mutex_lock(&lock_cout);
+              cout << "Raj detectou um deadlock, liberando " << pessoa.getName() << "\n";
+              pthread_mutex_unlock(&lock_cout);
               raj_liberou = false;
               pthread_mutex_unlock(&lock_raj_liberou);
               break;
@@ -469,6 +484,9 @@ void trata_prioridades(Person pessoa){
             //se o raj liberou, ignore o while
             pthread_mutex_lock(&lock_raj_liberou);
             if(raj_liberou){
+              pthread_mutex_lock(&lock_cout);
+              cout << "Raj detectou um deadlock, liberando " << pessoa.getName() << "\n";
+              pthread_mutex_unlock(&lock_cout);
               raj_liberou = false;
               pthread_mutex_unlock(&lock_raj_liberou);
               break;
@@ -510,6 +528,9 @@ void trata_prioridades(Person pessoa){
             //se o raj liberou, ignore o while
             pthread_mutex_lock(&lock_raj_liberou);
             if(raj_liberou){
+              pthread_mutex_lock(&lock_cout);
+              cout << "Raj detectou um deadlock, liberando " << pessoa.getName() << "\n";
+              pthread_mutex_unlock(&lock_cout);
               raj_liberou = false;
               pthread_mutex_unlock(&lock_raj_liberou);
               break;
@@ -913,29 +934,21 @@ class Microwave {
       //tratamento para casos de deadlock
       if(deadlock and !todos_casais){
         nmr_aleatorio = drand48 () * 2;
-
-        pthread_mutex_lock(&lock_raj_liberou);
-        raj_liberou = true;
-        pthread_mutex_unlock(&lock_raj_liberou);
-        pthread_cond_signal(&cond_p[pessoas_deadlock[nmr_aleatorio]]); 
-        
-        nmr_aleatorio++;
-        if(nmr_aleatorio == 3) 
-          nmr_aleatorio = 0;
-        pthread_mutex_lock(&lock_cout);
-        cout << "Raj detectou um deadlock, liberando " << p[pessoas_deadlock[nmr_aleatorio]].getName() << "\n";
-        pthread_mutex_unlock(&lock_cout);
       }
       else
       if(deadlock and todos_casais){
         nmr_aleatorio = drand48 () * 8;
         if((nmr_aleatorio > 2) and (nmr_aleatorio < 6))
           nmr_aleatorio += 3;
-
-        //se eu mando sinal de uma pessoa que é a primeira do casal, a outra pessoa do casal é liberada
-        //se eu mando sinal de uma pessoa que vai depois entre o casal, a primeira pessoa do casal que está esperando vai ser liberada  
       }
 
+      if(deadlock){
+        pthread_mutex_lock(&lock_raj_liberou);
+        raj_liberou = true;
+        pthread_mutex_unlock(&lock_raj_liberou); 
+        pthread_cond_signal(&cond_p[pessoas_deadlock[nmr_aleatorio]]);
+      }
+      
       pthread_mutex_unlock(&lock_p[SHELDON]);
       pthread_mutex_unlock(&lock_p[HOWARD]);
       pthread_mutex_unlock(&lock_p[LEONARD]);
