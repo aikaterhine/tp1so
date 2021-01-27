@@ -851,7 +851,7 @@ class Microwave {
     void check(){
       bool deadlock = false;
       bool todos_casais = false;
-      int pessoas_deadlock[3];
+      int pessoas_deadlock[9];
       srand48(time(NULL));
       int nmr_aleatorio;
 
