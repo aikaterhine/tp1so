@@ -863,6 +863,12 @@ class Microwave {
       pthread_mutex_lock(&lock_p[AMY]);
 
       if(p[SHELDON].getQuer_usar() and p[AMY].getQuer_usar() and p[HOWARD].getQuer_usar() and p[BERNADETTE].getQuer_usar() and p[LEONARD].getQuer_usar() and p[PENNY].getQuer_usar()){
+        pessoas_deadlock[0] = SHELDON;
+        pessoas_deadlock[1] = HOWARD;
+        pessoas_deadlock[2] = LEONARD;
+        pessoas_deadlock[6] = BERNADETTE;
+        pessoas_deadlock[7] = PENNY;
+        pessoas_deadlock[8] = AMY;
         deadlock = true;
         todos_casais = true;        
       }
