@@ -117,14 +117,20 @@ int prioridades(int idPessoa){
     case SHELDON:
       prior=LEONARD;
       break;
+    case AMY:
+      prior=PENNY;
+      break;
     case HOWARD:
       prior=SHELDON;
       break;
     case BERNADETTE:
-      prior = SHELDON;
+      prior = AMY;
       break;
     case LEONARD:
       prior=HOWARD;
+      break;
+    case PENNY:
+      prior=BERNADETTE;
       break;
     case STUART:
       prior=STUART;//como o stuart tem mais de um prior, a gente coloca ele mesmo como prior e trata nas funções
@@ -139,24 +145,30 @@ int prioridades(int idPessoa){
 }
 
 int dependentes(int idPessoa){
-  int prior = -1;
+  int dependente = -1;
   switch(idPessoa){
     case LEONARD:
-      prior=SHELDON;
+      dependente=SHELDON;
+      break;
+    case PENNY:
+      dependente=AMY;
       break;
     case SHELDON:
-      prior=HOWARD;
+      dependente=HOWARD;
+      break;
+    case AMY:
+      dependente=BERNADETTE;
       break;
     case BERNADETTE:
-      prior = LEONARD;
+      dependente = PENNY;
       break;
     case HOWARD:
-      prior=LEONARD;
+      dependente=LEONARD;
       break;
     default:
       perror("Dependentes não encontrada!");
   }
-  return prior;
+  return dependente;
 }
 
 int casais(int idPessoa){
@@ -173,6 +185,12 @@ int casais(int idPessoa){
       break;
     case BERNADETTE:
       casal=HOWARD;
+      break;
+    case PENNY:
+      casal=LEONARD;
+      break;
+    case AMY:
+      casal=SHELDON;
       break;
     default:
       perror("Casal não encontrado!");
@@ -245,10 +263,12 @@ void trata_prioridades(Person pessoa){
       pthread_mutex_lock(&lock_p[AMY]);
     while(1){
       int casal = casais(idPessoa);
+      int id_casal_pessoa = id_casal(idPessoa);
+      
       int pessoa_dependente = dependentes(idPessoa);
       int casal_pessoa_dependente = casal(pessoa_dependente);
+      
       int casal_prior = casal(prior);
-      int id_casal_pessoa = id_casal(idPessoa);
 
       if(!p[casal].getQuer_usar()){//caso eu não tenha casal na fila
         if(p[pessoa_dependente].getQuer_usar() and p[casal_pessoa_dependente].getQuer_usar()){//se o casal que depende de mim estiver na fila, esperar eles
@@ -612,9 +632,6 @@ void trata_prioridades(Person pessoa){
   }
   else
   if((prior == STUART) or (prior == KRIPKE)){
-    //tranca o forno
-    pthread_mutex_lock(&lock_forno);
-
     while(1){
       pthread_mutex_lock(&lock_p[SHELDON]);
       pthread_mutex_lock(&lock_p[HOWARD]);
@@ -753,6 +770,9 @@ void trata_prioridades(Person pessoa){
           ((prior == KRIPKE) and (!p[SHELDON].getQuer_usar() and !p[HOWARD].getQuer_usar() and !p[LEONARD].getQuer_usar() and !p[BERNADETTE].getQuer_usar() and !p[PENNY].getQuer_usar() and !p[AMY].getQuer_usar() and !p[STUART].getQuer_usar()))
           or ((prior == STUART) and (!p[SHELDON].getQuer_usar() and !p[HOWARD].getQuer_usar() and !p[LEONARD].getQuer_usar() and !p[BERNADETTE].getQuer_usar() and !p[PENNY].getQuer_usar() and !p[AMY].getQuer_usar()))
         ){
+          //tranca o forno
+          pthread_mutex_lock(&lock_forno);
+
           pthread_cond_signal(&cond_p[SHELDON]);
           pthread_mutex_unlock(&lock_p[SHELDON]);
 
@@ -841,6 +861,7 @@ class Microwave {
       pthread_cond_signal(&cond_p[pessoa.getId()]);
       pthread_mutex_unlock(&lock_p[pessoa.getId()]);
 
+      //destranca o forno
       pthread_mutex_unlock(&lock_forno);
 
       pthread_mutex_lock(&lock_cout);
@@ -938,21 +959,19 @@ class Microwave {
       }
 
       //tratamento para casos de deadlock
-      if(deadlock and !todos_casais){
-        nmr_aleatorio = drand48 () * 2;
-      }
-      else
-      if(deadlock and todos_casais){
-        nmr_aleatorio = drand48 () * 8;
-        if((nmr_aleatorio > 2) and (nmr_aleatorio < 6))
-          nmr_aleatorio += 3;
-      }
-
       if(deadlock){
+        if(!todos_casais){
+          nmr_aleatorio = drand48 () * 2;
+        }
+        else{
+          nmr_aleatorio = drand48 () * 8;
+          if((nmr_aleatorio > 2) and (nmr_aleatorio < 6))
+            nmr_aleatorio += 3;
+        }
         pthread_mutex_lock(&lock_raj_liberou);
         raj_liberou = true;
         pthread_mutex_unlock(&lock_raj_liberou); 
-        pthread_cond_signal(&cond_p[pessoas_deadlock[nmr_aleatorio]]);
+        pthread_cond_broadcast(&cond_p[pessoas_deadlock[nmr_aleatorio]]);
       }
       
       pthread_mutex_unlock(&lock_p[SHELDON]);
