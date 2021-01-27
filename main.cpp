@@ -4,8 +4,8 @@ using namespace std;
 
 //VARS GLOBAIS
 pthread_mutex_t lock_forno;
-pthread_mutex_t lock_p[NTHREADS];
-pthread_cond_t  cond_p[NTHREADS];
+pthread_mutex_t lock_p[9];//lock_p[NTHREADS]
+pthread_cond_t  cond_p[9];//cond_p[NTHREADS]
 pthread_mutex_t lock_raj_liberou;
 pthread_mutex_t lock_cout;
 pthread_mutex_t lock_primeiro_do_casal[3];
@@ -219,8 +219,8 @@ int id_casal(int idPessoa){
     case PENNY:
       id_casal=2;
       break;
-    default:
-      perror("id_Casal não encontrado!");
+    //default:
+    //  perror("id_Casal não encontrado!");
   }
 
   return id_casal;
@@ -230,7 +230,6 @@ void trata_prioridades(Person pessoa){
 
   int idPessoa = pessoa.getId();
   int prior = prioridades(idPessoa);
-  //cout << "--------------------------------------" << pessoa.getName() << ": Seu prior é: " << p[prior].getName() << "\n";
   if((prior!= -1) and (prior != STUART) and (prior != KRIPKE)){
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////   
     /*
@@ -261,15 +260,15 @@ void trata_prioridades(Person pessoa){
       pthread_mutex_lock(&lock_p[PENNY]);
     if(idPessoa != AMY)
       pthread_mutex_lock(&lock_p[AMY]);
-    while(1){
-      int casal = casais(idPessoa);
-      int id_casal_pessoa = id_casal(idPessoa);
-      
-      int pessoa_dependente = dependentes(idPessoa);
-      int casal_pessoa_dependente = casal(pessoa_dependente);
-      
-      int casal_prior = casal(prior);
 
+    int casal = casais(idPessoa);
+    int id_casal_pessoa = id_casal(idPessoa);
+    
+    int pessoa_dependente = dependentes(idPessoa);
+    int casal_pessoa_dependente = casais(pessoa_dependente);
+    
+    int casal_prior = casais(prior);
+    while(1){
       if(!p[casal].getQuer_usar()){//caso eu não tenha casal na fila
         if(p[pessoa_dependente].getQuer_usar() and p[casal_pessoa_dependente].getQuer_usar()){//se o casal que depende de mim estiver na fila, esperar eles
           while(p[pessoa_dependente].getQuer_usar()){//espero a pessoa que depende de mim
@@ -281,7 +280,40 @@ void trata_prioridades(Person pessoa){
               pthread_mutex_unlock(&lock_cout);
               raj_liberou = false;
               pthread_mutex_unlock(&lock_raj_liberou);
-              break;
+
+              //tranca o forno
+              pthread_mutex_lock(&lock_forno);
+
+              pthread_mutex_lock(&lock_cout);
+              cout << pessoa.getName() << " começa a esquentar algo" << "\n";
+              pthread_mutex_unlock(&lock_cout); 
+
+              if(idPessoa != SHELDON){
+                pthread_cond_signal(&cond_p[SHELDON]);
+                pthread_mutex_unlock(&lock_p[SHELDON]);
+              }
+              if(idPessoa != HOWARD){
+                pthread_cond_signal(&cond_p[HOWARD]);
+                pthread_mutex_unlock(&lock_p[HOWARD]);
+              }
+              if(idPessoa != LEONARD){
+                pthread_cond_signal(&cond_p[LEONARD]);
+                pthread_mutex_unlock(&lock_p[LEONARD]);
+              }
+              if(idPessoa != BERNADETTE){
+                pthread_cond_signal(&cond_p[BERNADETTE]);
+                pthread_mutex_unlock(&lock_p[BERNADETTE]);
+              }
+              if(idPessoa != PENNY){
+                pthread_cond_signal(&cond_p[PENNY]);
+                pthread_mutex_unlock(&lock_p[PENNY]);
+              }
+              if(idPessoa != AMY){
+                pthread_cond_signal(&cond_p[AMY]);
+                pthread_mutex_unlock(&lock_p[AMY]);
+              }
+
+              return;
             }
             else
               pthread_mutex_unlock(&lock_raj_liberou);
@@ -325,7 +357,40 @@ void trata_prioridades(Person pessoa){
               pthread_mutex_unlock(&lock_cout);
               raj_liberou = false;
               pthread_mutex_unlock(&lock_raj_liberou);
-              break;
+
+              //tranca o forno
+              pthread_mutex_lock(&lock_forno);
+
+              pthread_mutex_lock(&lock_cout);
+              cout << pessoa.getName() << " começa a esquentar algo" << "\n";
+              pthread_mutex_unlock(&lock_cout); 
+
+              if(idPessoa != SHELDON){
+                pthread_cond_signal(&cond_p[SHELDON]);
+                pthread_mutex_unlock(&lock_p[SHELDON]);
+              }
+              if(idPessoa != HOWARD){
+                pthread_cond_signal(&cond_p[HOWARD]);
+                pthread_mutex_unlock(&lock_p[HOWARD]);
+              }
+              if(idPessoa != LEONARD){
+                pthread_cond_signal(&cond_p[LEONARD]);
+                pthread_mutex_unlock(&lock_p[LEONARD]);
+              }
+              if(idPessoa != BERNADETTE){
+                pthread_cond_signal(&cond_p[BERNADETTE]);
+                pthread_mutex_unlock(&lock_p[BERNADETTE]);
+              }
+              if(idPessoa != PENNY){
+                pthread_cond_signal(&cond_p[PENNY]);
+                pthread_mutex_unlock(&lock_p[PENNY]);
+              }
+              if(idPessoa != AMY){
+                pthread_cond_signal(&cond_p[AMY]);
+                pthread_mutex_unlock(&lock_p[AMY]);
+              }
+
+              return;
             }
             else
               pthread_mutex_unlock(&lock_raj_liberou);
@@ -370,7 +435,40 @@ void trata_prioridades(Person pessoa){
             pthread_mutex_unlock(&lock_cout);
             raj_liberou = false;
             pthread_mutex_unlock(&lock_raj_liberou);
-            break;
+
+            //tranca o forno
+            pthread_mutex_lock(&lock_forno);
+
+            pthread_mutex_lock(&lock_cout);
+            cout << pessoa.getName() << " começa a esquentar algo" << "\n";
+            pthread_mutex_unlock(&lock_cout);
+
+            if(idPessoa != SHELDON){
+              pthread_cond_signal(&cond_p[SHELDON]);
+              pthread_mutex_unlock(&lock_p[SHELDON]);
+            }
+            if(idPessoa != HOWARD){
+              pthread_cond_signal(&cond_p[HOWARD]);
+              pthread_mutex_unlock(&lock_p[HOWARD]);
+            }
+            if(idPessoa != LEONARD){
+              pthread_cond_signal(&cond_p[LEONARD]);
+              pthread_mutex_unlock(&lock_p[LEONARD]);
+            }
+            if(idPessoa != BERNADETTE){
+              pthread_cond_signal(&cond_p[BERNADETTE]);
+              pthread_mutex_unlock(&lock_p[BERNADETTE]);
+            }
+            if(idPessoa != PENNY){
+              pthread_cond_signal(&cond_p[PENNY]);
+              pthread_mutex_unlock(&lock_p[PENNY]);
+            }
+            if(idPessoa != AMY){
+              pthread_cond_signal(&cond_p[AMY]);
+              pthread_mutex_unlock(&lock_p[AMY]);
+            }
+
+            return;
           }
           else
             pthread_mutex_unlock(&lock_raj_liberou);
@@ -414,7 +512,40 @@ void trata_prioridades(Person pessoa){
             pthread_mutex_unlock(&lock_cout);
             raj_liberou = false;
             pthread_mutex_unlock(&lock_raj_liberou);
-            break;
+
+            //tranca o forno
+            pthread_mutex_lock(&lock_forno);
+
+            pthread_mutex_lock(&lock_cout);
+            cout << pessoa.getName() << " começa a esquentar algo" << "\n";
+            pthread_mutex_unlock(&lock_cout); 
+
+            if(idPessoa != SHELDON){
+              pthread_cond_signal(&cond_p[SHELDON]);
+              pthread_mutex_unlock(&lock_p[SHELDON]);
+            }
+            if(idPessoa != HOWARD){
+              pthread_cond_signal(&cond_p[HOWARD]);
+              pthread_mutex_unlock(&lock_p[HOWARD]);
+            }
+            if(idPessoa != LEONARD){
+              pthread_cond_signal(&cond_p[LEONARD]);
+              pthread_mutex_unlock(&lock_p[LEONARD]);
+            }
+            if(idPessoa != BERNADETTE){
+              pthread_cond_signal(&cond_p[BERNADETTE]);
+              pthread_mutex_unlock(&lock_p[BERNADETTE]);
+            }
+            if(idPessoa != PENNY){
+              pthread_cond_signal(&cond_p[PENNY]);
+              pthread_mutex_unlock(&lock_p[PENNY]);
+            }
+            if(idPessoa != AMY){
+              pthread_cond_signal(&cond_p[AMY]);
+              pthread_mutex_unlock(&lock_p[AMY]);
+            }
+
+            return;
           }
           else
             pthread_mutex_unlock(&lock_raj_liberou);
@@ -463,7 +594,40 @@ void trata_prioridades(Person pessoa){
               pthread_mutex_unlock(&lock_cout);
               raj_liberou = false;
               pthread_mutex_unlock(&lock_raj_liberou);
-              break;
+
+              //tranca o forno
+              pthread_mutex_lock(&lock_forno);
+
+              pthread_mutex_lock(&lock_cout);
+              cout << pessoa.getName() << " começa a esquentar algo" << "\n";
+              pthread_mutex_unlock(&lock_cout); 
+
+              if(idPessoa != SHELDON){
+                pthread_cond_signal(&cond_p[SHELDON]);
+                pthread_mutex_unlock(&lock_p[SHELDON]);
+              }
+              if(idPessoa != HOWARD){
+                pthread_cond_signal(&cond_p[HOWARD]);
+                pthread_mutex_unlock(&lock_p[HOWARD]);
+              }
+              if(idPessoa != LEONARD){
+                pthread_cond_signal(&cond_p[LEONARD]);
+                pthread_mutex_unlock(&lock_p[LEONARD]);
+              }
+              if(idPessoa != BERNADETTE){
+                pthread_cond_signal(&cond_p[BERNADETTE]);
+                pthread_mutex_unlock(&lock_p[BERNADETTE]);
+              }
+              if(idPessoa != PENNY){
+                pthread_cond_signal(&cond_p[PENNY]);
+                pthread_mutex_unlock(&lock_p[PENNY]);
+              }
+              if(idPessoa != AMY){
+                pthread_cond_signal(&cond_p[AMY]);
+                pthread_mutex_unlock(&lock_p[AMY]);
+              }
+
+              return;
             }
             else
               pthread_mutex_unlock(&lock_raj_liberou);
@@ -509,7 +673,40 @@ void trata_prioridades(Person pessoa){
               pthread_mutex_unlock(&lock_cout);
               raj_liberou = false;
               pthread_mutex_unlock(&lock_raj_liberou);
-              break;
+
+              //tranca o forno
+              pthread_mutex_lock(&lock_forno);
+
+              pthread_mutex_lock(&lock_cout);
+              cout << pessoa.getName() << " começa a esquentar algo" << "\n";
+              pthread_mutex_unlock(&lock_cout); 
+
+              if(idPessoa != SHELDON){
+                pthread_cond_signal(&cond_p[SHELDON]);
+                pthread_mutex_unlock(&lock_p[SHELDON]);
+              }
+              if(idPessoa != HOWARD){
+                pthread_cond_signal(&cond_p[HOWARD]);
+                pthread_mutex_unlock(&lock_p[HOWARD]);
+              }
+              if(idPessoa != LEONARD){
+                pthread_cond_signal(&cond_p[LEONARD]);
+                pthread_mutex_unlock(&lock_p[LEONARD]);
+              }
+              if(idPessoa != BERNADETTE){
+                pthread_cond_signal(&cond_p[BERNADETTE]);
+                pthread_mutex_unlock(&lock_p[BERNADETTE]);
+              }
+              if(idPessoa != PENNY){
+                pthread_cond_signal(&cond_p[PENNY]);
+                pthread_mutex_unlock(&lock_p[PENNY]);
+              }
+              if(idPessoa != AMY){
+                pthread_cond_signal(&cond_p[AMY]);
+                pthread_mutex_unlock(&lock_p[AMY]);
+              }
+
+              return;
             }
             else
               pthread_mutex_unlock(&lock_raj_liberou);
@@ -553,7 +750,40 @@ void trata_prioridades(Person pessoa){
               pthread_mutex_unlock(&lock_cout);
               raj_liberou = false;
               pthread_mutex_unlock(&lock_raj_liberou);
-              break;
+
+              //tranca o forno
+              pthread_mutex_lock(&lock_forno);
+
+              pthread_mutex_lock(&lock_cout);
+              cout << pessoa.getName() << " começa a esquentar algo" << "\n";
+              pthread_mutex_unlock(&lock_cout); 
+
+              if(idPessoa != SHELDON){
+                pthread_cond_signal(&cond_p[SHELDON]);
+                pthread_mutex_unlock(&lock_p[SHELDON]);
+              }
+              if(idPessoa != HOWARD){
+                pthread_cond_signal(&cond_p[HOWARD]);
+                pthread_mutex_unlock(&lock_p[HOWARD]);
+              }
+              if(idPessoa != LEONARD){
+                pthread_cond_signal(&cond_p[LEONARD]);
+                pthread_mutex_unlock(&lock_p[LEONARD]);
+              }
+              if(idPessoa != BERNADETTE){
+                pthread_cond_signal(&cond_p[BERNADETTE]);
+                pthread_mutex_unlock(&lock_p[BERNADETTE]);
+              }
+              if(idPessoa != PENNY){
+                pthread_cond_signal(&cond_p[PENNY]);
+                pthread_mutex_unlock(&lock_p[PENNY]);
+              }
+              if(idPessoa != AMY){
+                pthread_cond_signal(&cond_p[AMY]);
+                pthread_mutex_unlock(&lock_p[AMY]);
+              }
+
+              return;
             }
             else
               pthread_mutex_unlock(&lock_raj_liberou);
@@ -600,7 +830,11 @@ void trata_prioridades(Person pessoa){
         pthread_mutex_unlock(&lock_primeiro_do_casal[id_casal_pessoa]);
 
         //tranca o forno
-        pthread_mutex_lock(&lock_forno); 
+        pthread_mutex_lock(&lock_forno);
+
+        pthread_mutex_lock(&lock_cout);
+        cout << pessoa.getName() << " começa a esquentar algo" << "\n";
+        pthread_mutex_unlock(&lock_cout); 
 
         if(idPessoa != SHELDON){
           pthread_cond_signal(&cond_p[SHELDON]);
@@ -773,6 +1007,10 @@ void trata_prioridades(Person pessoa){
           //tranca o forno
           pthread_mutex_lock(&lock_forno);
 
+          pthread_mutex_lock(&lock_cout);
+          cout << pessoa.getName() << " começa a esquentar algo" << "\n";
+          pthread_mutex_unlock(&lock_cout);
+
           pthread_cond_signal(&cond_p[SHELDON]);
           pthread_mutex_unlock(&lock_p[SHELDON]);
 
@@ -861,12 +1099,12 @@ class Microwave {
       pthread_cond_signal(&cond_p[pessoa.getId()]);
       pthread_mutex_unlock(&lock_p[pessoa.getId()]);
 
-      //destranca o forno
-      pthread_mutex_unlock(&lock_forno);
-
       pthread_mutex_lock(&lock_cout);
       cout << pessoa.getName() << " vai comer." << "\n";
       pthread_mutex_unlock(&lock_cout);
+
+      //destranca o forno
+      pthread_mutex_unlock(&lock_forno);
     }
 
     void check(){
