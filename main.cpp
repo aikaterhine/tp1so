@@ -233,9 +233,7 @@ void trata_prioridades(Person pessoa){
   if((prior!= -1) and (prior != STUART) and (prior != KRIPKE)){
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////   
     /*
-    SIGNAL GARANTE A ORDEM DE EXECUÇÃO, USE SIGNAL E DÊ OS SINAIS ANTES DOS ULTIMOS UNLOCKS DO WAIT
     MANTENHA A ORDEM DOS LOCKS, PARA GARANTIR QUE NAO TENHA DEADLOCK POR CAUSA DELES
-    DE UM SIGNAL ANTES DE DESTRANCAR AS VARIAVEIS NO FIM DO LOOP ETERNO
     - Toda vez que eu executo esta função, eu quero saber se eu posso usar o forno neste exato instante da fila, o que requer verificar todos menos RAJ, STUART e KRIPKE.
     - Eu deveria lockar todo mundo que eu preciso de uma vez, pois assim, eu consigo verificar a fila neste exato instante.
     - Após o lock, eu verifico tudo e espero quem eu precisar(para esperar quem eu preciso, será necessário dar unlock em todos os outros, o que muda o instante verificado).
@@ -289,27 +287,21 @@ void trata_prioridades(Person pessoa){
               pthread_mutex_unlock(&lock_cout); 
 
               if(idPessoa != SHELDON){
-                pthread_cond_signal(&cond_p[SHELDON]);
                 pthread_mutex_unlock(&lock_p[SHELDON]);
               }
               if(idPessoa != HOWARD){
-                pthread_cond_signal(&cond_p[HOWARD]);
                 pthread_mutex_unlock(&lock_p[HOWARD]);
               }
               if(idPessoa != LEONARD){
-                pthread_cond_signal(&cond_p[LEONARD]);
                 pthread_mutex_unlock(&lock_p[LEONARD]);
               }
               if(idPessoa != BERNADETTE){
-                pthread_cond_signal(&cond_p[BERNADETTE]);
                 pthread_mutex_unlock(&lock_p[BERNADETTE]);
               }
               if(idPessoa != PENNY){
-                pthread_cond_signal(&cond_p[PENNY]);
                 pthread_mutex_unlock(&lock_p[PENNY]);
               }
               if(idPessoa != AMY){
-                pthread_cond_signal(&cond_p[AMY]);
                 pthread_mutex_unlock(&lock_p[AMY]);
               }
 
@@ -366,27 +358,21 @@ void trata_prioridades(Person pessoa){
               pthread_mutex_unlock(&lock_cout); 
 
               if(idPessoa != SHELDON){
-                pthread_cond_signal(&cond_p[SHELDON]);
                 pthread_mutex_unlock(&lock_p[SHELDON]);
               }
               if(idPessoa != HOWARD){
-                pthread_cond_signal(&cond_p[HOWARD]);
                 pthread_mutex_unlock(&lock_p[HOWARD]);
               }
               if(idPessoa != LEONARD){
-                pthread_cond_signal(&cond_p[LEONARD]);
                 pthread_mutex_unlock(&lock_p[LEONARD]);
               }
               if(idPessoa != BERNADETTE){
-                pthread_cond_signal(&cond_p[BERNADETTE]);
                 pthread_mutex_unlock(&lock_p[BERNADETTE]);
               }
               if(idPessoa != PENNY){
-                pthread_cond_signal(&cond_p[PENNY]);
                 pthread_mutex_unlock(&lock_p[PENNY]);
               }
               if(idPessoa != AMY){
-                pthread_cond_signal(&cond_p[AMY]);
                 pthread_mutex_unlock(&lock_p[AMY]);
               }
 
@@ -444,27 +430,21 @@ void trata_prioridades(Person pessoa){
             pthread_mutex_unlock(&lock_cout);
 
             if(idPessoa != SHELDON){
-              pthread_cond_signal(&cond_p[SHELDON]);
               pthread_mutex_unlock(&lock_p[SHELDON]);
             }
             if(idPessoa != HOWARD){
-              pthread_cond_signal(&cond_p[HOWARD]);
               pthread_mutex_unlock(&lock_p[HOWARD]);
             }
             if(idPessoa != LEONARD){
-              pthread_cond_signal(&cond_p[LEONARD]);
               pthread_mutex_unlock(&lock_p[LEONARD]);
             }
             if(idPessoa != BERNADETTE){
-              pthread_cond_signal(&cond_p[BERNADETTE]);
               pthread_mutex_unlock(&lock_p[BERNADETTE]);
             }
             if(idPessoa != PENNY){
-              pthread_cond_signal(&cond_p[PENNY]);
               pthread_mutex_unlock(&lock_p[PENNY]);
             }
             if(idPessoa != AMY){
-              pthread_cond_signal(&cond_p[AMY]);
               pthread_mutex_unlock(&lock_p[AMY]);
             }
 
@@ -521,27 +501,21 @@ void trata_prioridades(Person pessoa){
             pthread_mutex_unlock(&lock_cout); 
 
             if(idPessoa != SHELDON){
-              pthread_cond_signal(&cond_p[SHELDON]);
               pthread_mutex_unlock(&lock_p[SHELDON]);
             }
             if(idPessoa != HOWARD){
-              pthread_cond_signal(&cond_p[HOWARD]);
               pthread_mutex_unlock(&lock_p[HOWARD]);
             }
             if(idPessoa != LEONARD){
-              pthread_cond_signal(&cond_p[LEONARD]);
               pthread_mutex_unlock(&lock_p[LEONARD]);
             }
             if(idPessoa != BERNADETTE){
-              pthread_cond_signal(&cond_p[BERNADETTE]);
               pthread_mutex_unlock(&lock_p[BERNADETTE]);
             }
             if(idPessoa != PENNY){
-              pthread_cond_signal(&cond_p[PENNY]);
               pthread_mutex_unlock(&lock_p[PENNY]);
             }
             if(idPessoa != AMY){
-              pthread_cond_signal(&cond_p[AMY]);
               pthread_mutex_unlock(&lock_p[AMY]);
             }
 
@@ -603,27 +577,21 @@ void trata_prioridades(Person pessoa){
               pthread_mutex_unlock(&lock_cout); 
 
               if(idPessoa != SHELDON){
-                pthread_cond_signal(&cond_p[SHELDON]);
                 pthread_mutex_unlock(&lock_p[SHELDON]);
               }
               if(idPessoa != HOWARD){
-                pthread_cond_signal(&cond_p[HOWARD]);
                 pthread_mutex_unlock(&lock_p[HOWARD]);
               }
               if(idPessoa != LEONARD){
-                pthread_cond_signal(&cond_p[LEONARD]);
                 pthread_mutex_unlock(&lock_p[LEONARD]);
               }
               if(idPessoa != BERNADETTE){
-                pthread_cond_signal(&cond_p[BERNADETTE]);
                 pthread_mutex_unlock(&lock_p[BERNADETTE]);
               }
               if(idPessoa != PENNY){
-                pthread_cond_signal(&cond_p[PENNY]);
                 pthread_mutex_unlock(&lock_p[PENNY]);
               }
               if(idPessoa != AMY){
-                pthread_cond_signal(&cond_p[AMY]);
                 pthread_mutex_unlock(&lock_p[AMY]);
               }
 
@@ -682,27 +650,21 @@ void trata_prioridades(Person pessoa){
               pthread_mutex_unlock(&lock_cout); 
 
               if(idPessoa != SHELDON){
-                pthread_cond_signal(&cond_p[SHELDON]);
                 pthread_mutex_unlock(&lock_p[SHELDON]);
               }
               if(idPessoa != HOWARD){
-                pthread_cond_signal(&cond_p[HOWARD]);
                 pthread_mutex_unlock(&lock_p[HOWARD]);
               }
               if(idPessoa != LEONARD){
-                pthread_cond_signal(&cond_p[LEONARD]);
                 pthread_mutex_unlock(&lock_p[LEONARD]);
               }
               if(idPessoa != BERNADETTE){
-                pthread_cond_signal(&cond_p[BERNADETTE]);
                 pthread_mutex_unlock(&lock_p[BERNADETTE]);
               }
               if(idPessoa != PENNY){
-                pthread_cond_signal(&cond_p[PENNY]);
                 pthread_mutex_unlock(&lock_p[PENNY]);
               }
               if(idPessoa != AMY){
-                pthread_cond_signal(&cond_p[AMY]);
                 pthread_mutex_unlock(&lock_p[AMY]);
               }
 
@@ -759,27 +721,21 @@ void trata_prioridades(Person pessoa){
               pthread_mutex_unlock(&lock_cout); 
 
               if(idPessoa != SHELDON){
-                pthread_cond_signal(&cond_p[SHELDON]);
                 pthread_mutex_unlock(&lock_p[SHELDON]);
               }
               if(idPessoa != HOWARD){
-                pthread_cond_signal(&cond_p[HOWARD]);
                 pthread_mutex_unlock(&lock_p[HOWARD]);
               }
               if(idPessoa != LEONARD){
-                pthread_cond_signal(&cond_p[LEONARD]);
                 pthread_mutex_unlock(&lock_p[LEONARD]);
               }
               if(idPessoa != BERNADETTE){
-                pthread_cond_signal(&cond_p[BERNADETTE]);
                 pthread_mutex_unlock(&lock_p[BERNADETTE]);
               }
               if(idPessoa != PENNY){
-                pthread_cond_signal(&cond_p[PENNY]);
                 pthread_mutex_unlock(&lock_p[PENNY]);
               }
               if(idPessoa != AMY){
-                pthread_cond_signal(&cond_p[AMY]);
                 pthread_mutex_unlock(&lock_p[AMY]);
               }
 
@@ -837,27 +793,21 @@ void trata_prioridades(Person pessoa){
         pthread_mutex_unlock(&lock_cout); 
 
         if(idPessoa != SHELDON){
-          pthread_cond_signal(&cond_p[SHELDON]);
           pthread_mutex_unlock(&lock_p[SHELDON]);
         }
         if(idPessoa != HOWARD){
-          pthread_cond_signal(&cond_p[HOWARD]);
           pthread_mutex_unlock(&lock_p[HOWARD]);
         }
         if(idPessoa != LEONARD){
-          pthread_cond_signal(&cond_p[LEONARD]);
           pthread_mutex_unlock(&lock_p[LEONARD]);
         }
         if(idPessoa != BERNADETTE){
-          pthread_cond_signal(&cond_p[BERNADETTE]);
           pthread_mutex_unlock(&lock_p[BERNADETTE]);
         }
         if(idPessoa != PENNY){
-          pthread_cond_signal(&cond_p[PENNY]);
           pthread_mutex_unlock(&lock_p[PENNY]);
         }
         if(idPessoa != AMY){
-          pthread_cond_signal(&cond_p[AMY]);
           pthread_mutex_unlock(&lock_p[AMY]);
         }
         break;
@@ -1011,22 +961,16 @@ void trata_prioridades(Person pessoa){
           cout << pessoa.getName() << " começa a esquentar algo" << "\n";
           pthread_mutex_unlock(&lock_cout);
 
-          pthread_cond_signal(&cond_p[SHELDON]);
           pthread_mutex_unlock(&lock_p[SHELDON]);
 
-          pthread_cond_signal(&cond_p[HOWARD]);
           pthread_mutex_unlock(&lock_p[HOWARD]);
 
-          pthread_cond_signal(&cond_p[LEONARD]);
           pthread_mutex_unlock(&lock_p[LEONARD]);
 
-          pthread_cond_signal(&cond_p[BERNADETTE]);
           pthread_mutex_unlock(&lock_p[BERNADETTE]);
 
-          pthread_cond_signal(&cond_p[PENNY]);
           pthread_mutex_unlock(&lock_p[PENNY]);
 
-          pthread_cond_signal(&cond_p[AMY]);
           pthread_mutex_unlock(&lock_p[AMY]);
 
           if(prior == KRIPKE){
@@ -1096,7 +1040,7 @@ class Microwave {
       primeiro_do_casal[id_casal_junto] = -1;
       pthread_mutex_unlock(&lock_primeiro_do_casal[id_casal_junto]);
 
-      pthread_cond_signal(&cond_p[pessoa.getId()]);
+      pthread_cond_broadcast(&cond_p[pessoa.getId()]);
       pthread_mutex_unlock(&lock_p[pessoa.getId()]);
 
       pthread_mutex_lock(&lock_cout);
@@ -1246,7 +1190,7 @@ void* execute_threads(void* thread) {
         pthread_mutex_unlock(&lock_thrds_terminated);
 
         pthread_mutex_lock(&lock_cout);
-        cout << "--------------------------------------" << "\n";
+        cout << "-------------------------------------- ";
         cout << p[my_thread].getName() << ": Terminou suas tarefas." << "\n";
         pthread_mutex_unlock(&lock_cout);
         return NULL;
@@ -1261,7 +1205,7 @@ void* execute_threads(void* thread) {
       pthread_mutex_lock(&lock_thrds_terminated);
       if(thrds_terminated == NTHREADS - 1){
         pthread_mutex_lock(&lock_cout);
-        cout << "--------------------------------------" << "\n";
+        cout << "-------------------------------------- ";
         cout << p[my_thread].getName() << ": Terminou suas tarefas." << "\n";
         pthread_mutex_unlock(&lock_cout);
         return NULL;
