@@ -552,7 +552,7 @@ void trata_prioridades(Person pessoa){
       }
 
       if(p[casal].getQuer_usar()){//se eu tiver casal na fila
-        cout << "------------------------------------ " << pessoa.getName() << ": salve, meu casal está na fila " << "\n";
+
         //verifico se o meu casal vai primeiro, caso verdadeiro, espero
         pthread_mutex_lock(&lock_primeiro_do_casal[id_casal_pessoa]);
         if(primeiro_do_casal[id_casal_pessoa] == casal){
@@ -666,6 +666,8 @@ void trata_prioridades(Person pessoa){
               if(idPessoa != AMY){
                 pthread_mutex_unlock(&lock_p[AMY]);
               }
+
+              return;
             }
           }
         }
@@ -1037,20 +1039,6 @@ class Microwave {
       pthread_mutex_lock(&lock_p[pessoa.getId()]);
       pessoa.setQuer_usar(true);
 
-      /*int casal = casais(pessoa.getId());
-      if(casal != -1){
-        pthread_mutex_lock(&lock_p[casal]);
-
-        if(p[casal].getQuer_usar()){
-          int id_casal_junto = id_casal(casal);
-          pthread_mutex_lock(&lock_casal_junto[id_casal_junto]);
-          casal_junto[id_casal_junto] = true;
-          pthread_mutex_unlock(&lock_casal_junto[id_casal_junto]);
-        }
-
-        pthread_mutex_unlock(&lock_p[casal]);
-      }*/
-
       pthread_mutex_lock(&lock_cout);
       cout << pessoa.getName() << " quer usar o forno." << "\n";
       pthread_mutex_unlock(&lock_cout);
@@ -1058,8 +1046,15 @@ class Microwave {
       int id_primeiro_casal = id_casal(pessoa.getId());
       if(id_primeiro_casal != -1){
         pthread_mutex_lock(&lock_primeiro_do_casal[id_primeiro_casal]);
+        
         if(primeiro_do_casal[id_primeiro_casal] == -1)
           primeiro_do_casal[id_primeiro_casal] = pessoa.getId();
+        else{
+          pthread_mutex_lock(&lock_casal_junto[id_primeiro_casal]);
+          casal_junto[id_primeiro_casal] = true;
+          pthread_mutex_unlock(&lock_casal_junto[id_primeiro_casal]);
+        }
+
         pthread_mutex_unlock(&lock_primeiro_do_casal[id_primeiro_casal]);
       }    
 
@@ -1073,12 +1068,17 @@ class Microwave {
       pessoa.setQuer_usar(false);
       
       int id_casal_junto = id_casal(pessoa.getId());
-      /*pthread_mutex_lock(&lock_casal_junto[id_casal_junto]);
-      casal_junto[id_casal_junto] = false;
-      pthread_mutex_unlock(&lock_casal_junto[id_casal_junto]);*/
-
       pthread_mutex_lock(&lock_primeiro_do_casal[id_casal_junto]);
-      primeiro_do_casal[id_casal_junto] = -1;
+      pthread_mutex_lock(&lock_casal_junto[id_casal_junto]);
+
+      if(casal_junto[id_casal_junto] and (primeiro_do_casal[id_casal_junto] == -1)){//se o casal estava junto e agora o segundo do casal esta parando de usar o forno
+        casal_junto[id_casal_junto] = false;//não é mais uma situação de casal na fila
+      }
+      else
+      if(primeiro_do_casal[id_casal_junto] != -1)
+        primeiro_do_casal[id_casal_junto] = -1;
+        
+      pthread_mutex_unlock(&lock_casal_junto[id_casal_junto]);   
       pthread_mutex_unlock(&lock_primeiro_do_casal[id_casal_junto]);
 
       pthread_cond_broadcast(&cond_p[pessoa.getId()]);
@@ -1106,7 +1106,17 @@ class Microwave {
       pthread_mutex_lock(&lock_p[PENNY]);
       pthread_mutex_lock(&lock_p[AMY]);
 
-      if(p[SHELDON].getQuer_usar() and p[AMY].getQuer_usar() and p[HOWARD].getQuer_usar() and p[BERNADETTE].getQuer_usar() and p[LEONARD].getQuer_usar() and p[PENNY].getQuer_usar()){
+      pthread_mutex_lock(&lock_primeiro_do_casal[0]);
+      pthread_mutex_lock(&lock_casal_junto[0]);
+      pthread_mutex_lock(&lock_primeiro_do_casal[1]);
+      pthread_mutex_lock(&lock_casal_junto[1]);
+      pthread_mutex_lock(&lock_primeiro_do_casal[2]);
+      pthread_mutex_lock(&lock_casal_junto[2]);
+
+      if(//se todos os casais estão juntos e ninguém chegou a usar o forno ainda...
+        p[SHELDON].getQuer_usar() and p[AMY].getQuer_usar() and p[HOWARD].getQuer_usar() and p[BERNADETTE].getQuer_usar() and p[LEONARD].getQuer_usar() and p[PENNY].getQuer_usar()
+        and !((primeiro_do_casal[0] == -1) or (primeiro_do_casal[1] == -1) or (primeiro_do_casal[2] == -1))
+      ){
         pessoas_deadlock[0] = SHELDON;
         pessoas_deadlock[1] = HOWARD;
         pessoas_deadlock[2] = LEONARD;
@@ -1117,7 +1127,10 @@ class Microwave {
         todos_casais = true;        
       }
       else
-      if(p[SHELDON].getQuer_usar() and p[HOWARD].getQuer_usar() and p[LEONARD].getQuer_usar()){
+      if(//se estes 3 estão juntos e não tem nenhuma situação de casal na fila...
+        p[SHELDON].getQuer_usar() and p[HOWARD].getQuer_usar() and p[LEONARD].getQuer_usar()
+        and !(casal_junto[0] or casal_junto[1] or casal_junto[2])
+      ){
         pessoas_deadlock[0] = SHELDON;
         pessoas_deadlock[1] = HOWARD;
         pessoas_deadlock[2] = LEONARD;
@@ -1125,7 +1138,10 @@ class Microwave {
         deadlock = true;
       }
       else
-      if(p[SHELDON].getQuer_usar() and p[BERNADETTE].getQuer_usar() and p[LEONARD].getQuer_usar()){
+      if(//se estes 3 estão juntos e não tem nenhuma situação de casal na fila...
+        p[SHELDON].getQuer_usar() and p[BERNADETTE].getQuer_usar() and p[LEONARD].getQuer_usar()
+        and !(casal_junto[0] or casal_junto[1] or casal_junto[2])
+      ){
         pessoas_deadlock[0] = SHELDON;
         pessoas_deadlock[1] = BERNADETTE;
         pessoas_deadlock[2] = LEONARD;
@@ -1133,7 +1149,10 @@ class Microwave {
         deadlock = true;
       }
       else
-      if(p[AMY].getQuer_usar() and p[BERNADETTE].getQuer_usar() and p[LEONARD].getQuer_usar()){
+      if(//se estes 3 estão juntos e não tem nenhuma situação de casal na fila...
+          p[AMY].getQuer_usar() and p[BERNADETTE].getQuer_usar() and p[LEONARD].getQuer_usar()
+          and !(casal_junto[0] or casal_junto[1] or casal_junto[2])
+      ){
         pessoas_deadlock[0] = AMY;
         pessoas_deadlock[1] = BERNADETTE;
         pessoas_deadlock[2] = LEONARD;
@@ -1141,7 +1160,10 @@ class Microwave {
         deadlock = true;
       }
       else
-      if(p[AMY].getQuer_usar() and p[HOWARD].getQuer_usar() and p[LEONARD].getQuer_usar()){
+      if(//se estes 3 estão juntos e não tem nenhuma situação de casal na fila...
+          p[AMY].getQuer_usar() and p[HOWARD].getQuer_usar() and p[LEONARD].getQuer_usar()
+          and !(casal_junto[0] or casal_junto[1] or casal_junto[2])
+      ){
         pessoas_deadlock[0] = AMY;
         pessoas_deadlock[1] = HOWARD;
         pessoas_deadlock[2] = LEONARD;
@@ -1149,7 +1171,10 @@ class Microwave {
         deadlock = true;
       }
       else
-      if(p[SHELDON].getQuer_usar() and p[HOWARD].getQuer_usar() and p[PENNY].getQuer_usar()){
+      if(//se estes 3 estão juntos e não tem nenhuma situação de casal na fila...
+          p[SHELDON].getQuer_usar() and p[HOWARD].getQuer_usar() and p[PENNY].getQuer_usar()
+          and !(casal_junto[0] or casal_junto[1] or casal_junto[2])
+      ){
         pessoas_deadlock[0] = SHELDON;
         pessoas_deadlock[1] = HOWARD;
         pessoas_deadlock[2] = PENNY;
@@ -1157,7 +1182,10 @@ class Microwave {
         deadlock = true;
       }
       else
-      if(p[SHELDON].getQuer_usar() and p[BERNADETTE].getQuer_usar() and p[PENNY].getQuer_usar()){
+      if(//se estes 3 estão juntos e não tem nenhuma situação de casal na fila...
+          p[SHELDON].getQuer_usar() and p[BERNADETTE].getQuer_usar() and p[PENNY].getQuer_usar()
+          and !(casal_junto[0] or casal_junto[1] or casal_junto[2])
+      ){
         pessoas_deadlock[0] = SHELDON;
         pessoas_deadlock[1] = BERNADETTE;
         pessoas_deadlock[2] = PENNY;
@@ -1165,7 +1193,10 @@ class Microwave {
         deadlock = true;
       }
       else
-      if(p[AMY].getQuer_usar() and p[BERNADETTE].getQuer_usar() and p[PENNY].getQuer_usar()){
+      if(//se estes 3 estão juntos e não tem nenhuma situação de casal na fila...
+        p[AMY].getQuer_usar() and p[BERNADETTE].getQuer_usar() and p[PENNY].getQuer_usar()
+        and !(casal_junto[0] or casal_junto[1] or casal_junto[2])
+      ){
         pessoas_deadlock[0] = AMY;
         pessoas_deadlock[1] = BERNADETTE;
         pessoas_deadlock[2] = PENNY;
@@ -1173,7 +1204,10 @@ class Microwave {
         deadlock = true;
       }
       else
-      if(p[AMY].getQuer_usar() and p[HOWARD].getQuer_usar() and p[PENNY].getQuer_usar()){
+      if(//se estes 3 estão juntos e não tem nenhuma situação de casal na fila...
+          p[AMY].getQuer_usar() and p[HOWARD].getQuer_usar() and p[PENNY].getQuer_usar()
+          and !(casal_junto[0] or casal_junto[1] or casal_junto[2])
+      ){
         pessoas_deadlock[0] = AMY;
         pessoas_deadlock[1] = HOWARD;
         pessoas_deadlock[2] = PENNY;
@@ -1196,6 +1230,13 @@ class Microwave {
         pthread_mutex_unlock(&lock_raj_liberou); 
         pthread_cond_broadcast(&cond_p[pessoas_deadlock[nmr_aleatorio]]);
       }
+
+      pthread_mutex_unlock(&lock_primeiro_do_casal[0]);
+      pthread_mutex_unlock(&lock_casal_junto[0]);
+      pthread_mutex_unlock(&lock_primeiro_do_casal[1]);
+      pthread_mutex_unlock(&lock_casal_junto[1]);
+      pthread_mutex_unlock(&lock_primeiro_do_casal[2]);
+      pthread_mutex_unlock(&lock_casal_junto[2]);
       
       pthread_mutex_unlock(&lock_p[SHELDON]);
       pthread_mutex_unlock(&lock_p[HOWARD]);
