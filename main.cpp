@@ -266,6 +266,15 @@ void trata_prioridades(Person pessoa){
     int casal_pessoa_dependente = casais(pessoa_dependente);
     
     int casal_prior = casais(prior);
+
+    pthread_mutex_lock(&lock_casal_junto[id_casal_pessoa]);
+    if(p[casal].getQuer_usar()){
+      casal_junto[id_casal_pessoa] = true;
+    }
+    else
+      casal_junto[id_casal_pessoa] = false;                   
+    pthread_mutex_unlock(&lock_casal_junto[id_casal_pessoa]);
+    //a partir daqui começa a espera desta pessoa, caso seja necessário esperar
     while(1){
       if(p[pessoa_dependente].getQuer_usar() and p[casal_pessoa_dependente].getQuer_usar() and !p[casal].getQuer_usar()){//se eu não tiver casal e o casal que depende de mim estiver na fila, esperar eles
         while(p[pessoa_dependente].getQuer_usar() and !p[casal].getQuer_usar()){//espero a pessoa que depende de mim
@@ -818,7 +827,7 @@ void trata_prioridades(Person pessoa){
           }
         }
       }
-      cout << "------------------------------------ " << pessoa.getName() << ": salve, verifico se posso usar o forno " << "\n";
+
       //verifico se eu posso usar o forno agora
       pthread_mutex_lock(&lock_primeiro_do_casal[id_casal_pessoa]);
       if(
@@ -826,7 +835,7 @@ void trata_prioridades(Person pessoa){
           or (p[casal].getQuer_usar() and (primeiro_do_casal[id_casal_pessoa] == idPessoa) and !(p[prior].getQuer_usar() and p[casal_prior].getQuer_usar()))
       ){
         pthread_mutex_unlock(&lock_primeiro_do_casal[id_casal_pessoa]);
-        cout << "------------------------------------ " << pessoa.getName() << ": salve, posso usar o forno " << "\n";
+        
         //tranca o forno
         pthread_mutex_lock(&lock_forno);
 
@@ -1041,7 +1050,6 @@ class Microwave {
 
       pthread_mutex_lock(&lock_cout);
       cout << pessoa.getName() << " quer usar o forno." << "\n";
-      pthread_mutex_unlock(&lock_cout);
 
       int id_primeiro_casal = id_casal(pessoa.getId());
       if(id_primeiro_casal != -1){
@@ -1049,14 +1057,13 @@ class Microwave {
         
         if(primeiro_do_casal[id_primeiro_casal] == -1)
           primeiro_do_casal[id_primeiro_casal] = pessoa.getId();
-        else{
-          pthread_mutex_lock(&lock_casal_junto[id_primeiro_casal]);
-          casal_junto[id_primeiro_casal] = true;
-          pthread_mutex_unlock(&lock_casal_junto[id_primeiro_casal]);
-        }
 
         pthread_mutex_unlock(&lock_primeiro_do_casal[id_primeiro_casal]);
-      }    
+      }
+
+      pthread_mutex_unlock(&lock_cout);
+
+          
 
       pthread_mutex_unlock(&lock_p[pessoa.getId()]);  
 
