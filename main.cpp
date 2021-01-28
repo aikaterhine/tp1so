@@ -330,7 +330,7 @@ void trata_prioridades(Person pessoa){
             pthread_mutex_unlock(&lock_p[PENNY]);
           if((idPessoa != AMY) and (pessoa_dependente != AMY))
             pthread_mutex_unlock(&lock_p[AMY]);
-          cout << "------------------------------------ " << pessoa.getName() << ": Esperando " << p[pessoa_dependente].getName() << "\n";
+          //cout << "------------------------------------ " << pessoa.getName() << ": Esperando " << p[pessoa_dependente].getName() << "\n";
           pthread_cond_wait(&cond_p[pessoa_dependente], &lock_p[pessoa_dependente]);
           pthread_mutex_unlock(&lock_p[pessoa_dependente]);
 
@@ -835,7 +835,7 @@ void trata_prioridades(Person pessoa){
           or (p[casal].getQuer_usar() and (primeiro_do_casal[id_casal_pessoa] == idPessoa) and !(p[prior].getQuer_usar() and p[casal_prior].getQuer_usar()))
       ){
         pthread_mutex_unlock(&lock_primeiro_do_casal[id_casal_pessoa]);
-        
+
         //tranca o forno
         pthread_mutex_lock(&lock_forno);
 
@@ -869,12 +869,19 @@ void trata_prioridades(Person pessoa){
   else
   if((prior == STUART) or (prior == KRIPKE)){
     while(1){
+      cout << "------------------------------------ " << pessoa.getName() << ": Vai tentar pegar os locks" << "\n";
       pthread_mutex_lock(&lock_p[SHELDON]);
+      cout << "------------------------------------ " << pessoa.getName() << ": Pegou o lock do sheldon" << "\n";
       pthread_mutex_lock(&lock_p[HOWARD]);
+      cout << "------------------------------------ " << pessoa.getName() << ": Pegou o lock do howard" << "\n";
       pthread_mutex_lock(&lock_p[LEONARD]);
+      cout << "------------------------------------ " << pessoa.getName() << ": Pegou o lock do leonard" << "\n";
       pthread_mutex_lock(&lock_p[BERNADETTE]);
+      cout << "------------------------------------ " << pessoa.getName() << ": Pegou o lock da Bernadette" << "\n";
       pthread_mutex_lock(&lock_p[PENNY]);
+      cout << "------------------------------------ " << pessoa.getName() << ": Pegou o lock da Penny" << "\n";
       pthread_mutex_lock(&lock_p[AMY]);
+      cout << "------------------------------------ " << pessoa.getName() << ": Conseguiu os locks " << "\n";
       if(prior == KRIPKE){
         pthread_mutex_lock(&lock_p[STUART]);
         while(p[STUART].getQuer_usar()){
@@ -884,7 +891,7 @@ void trata_prioridades(Person pessoa){
           pthread_mutex_unlock(&lock_p[BERNADETTE]);
           pthread_mutex_unlock(&lock_p[PENNY]);
           pthread_mutex_unlock(&lock_p[AMY]);
-
+          cout << "------------------------------------ " << pessoa.getName() << ": Esperando " << p[STUART].getName() << "\n";
           pthread_cond_wait(&cond_p[STUART], &lock_p[STUART]);
 
           pthread_mutex_lock(&lock_p[SHELDON]);
@@ -902,7 +909,7 @@ void trata_prioridades(Person pessoa){
         pthread_mutex_unlock(&lock_p[BERNADETTE]);
         pthread_mutex_unlock(&lock_p[PENNY]);
         pthread_mutex_unlock(&lock_p[AMY]);
-
+        cout << "------------------------------------ " << pessoa.getName() << ": Esperando " << p[SHELDON].getName() << "\n";
         pthread_cond_wait(&cond_p[SHELDON], &lock_p[SHELDON]);
 
         pthread_mutex_lock(&lock_p[HOWARD]);
@@ -918,7 +925,7 @@ void trata_prioridades(Person pessoa){
         pthread_mutex_unlock(&lock_p[BERNADETTE]);
         pthread_mutex_unlock(&lock_p[PENNY]);
         pthread_mutex_unlock(&lock_p[AMY]);
-
+        cout << "------------------------------------ " << pessoa.getName() << ": Esperando " << p[HOWARD].getName() << "\n";
         pthread_cond_wait(&cond_p[HOWARD], &lock_p[HOWARD]);
         pthread_mutex_unlock(&lock_p[HOWARD]);
 
@@ -936,7 +943,7 @@ void trata_prioridades(Person pessoa){
         pthread_mutex_unlock(&lock_p[BERNADETTE]);
         pthread_mutex_unlock(&lock_p[PENNY]);
         pthread_mutex_unlock(&lock_p[AMY]);
-
+        cout << "------------------------------------ " << pessoa.getName() << ": Esperando " << p[LEONARD].getName() << "\n";
         pthread_cond_wait(&cond_p[LEONARD], &lock_p[LEONARD]);
         pthread_mutex_unlock(&lock_p[LEONARD]);
 
@@ -954,7 +961,7 @@ void trata_prioridades(Person pessoa){
         pthread_mutex_unlock(&lock_p[LEONARD]);
         pthread_mutex_unlock(&lock_p[PENNY]);
         pthread_mutex_unlock(&lock_p[AMY]);
-
+        cout << "------------------------------------ " << pessoa.getName() << ": Esperando " << p[BERNADETTE].getName() << "\n";
         pthread_cond_wait(&cond_p[BERNADETTE], &lock_p[BERNADETTE]);
         pthread_mutex_unlock(&lock_p[BERNADETTE]);
 
@@ -972,7 +979,7 @@ void trata_prioridades(Person pessoa){
           pthread_mutex_unlock(&lock_p[LEONARD]);
           pthread_mutex_unlock(&lock_p[BERNADETTE]);
           pthread_mutex_unlock(&lock_p[AMY]);
-
+          cout << "------------------------------------ " << pessoa.getName() << ": Esperando " << p[PENNY].getName() << "\n";
           pthread_cond_wait(&cond_p[PENNY], &lock_p[PENNY]);
           pthread_mutex_unlock(&lock_p[PENNY]);
 
@@ -990,7 +997,7 @@ void trata_prioridades(Person pessoa){
           pthread_mutex_unlock(&lock_p[LEONARD]);
           pthread_mutex_unlock(&lock_p[BERNADETTE]);
           pthread_mutex_unlock(&lock_p[PENNY]);
-
+          cout << "------------------------------------ " << pessoa.getName() << ": Esperando " << p[AMY].getName() << "\n";
           pthread_cond_wait(&cond_p[AMY], &lock_p[AMY]);
           pthread_mutex_unlock(&lock_p[AMY]);
 
@@ -1071,13 +1078,15 @@ class Microwave {
     }
 
     void release(Person &pessoa){
+      cout << pessoa.getName() << " vai TENTAR comer." << "\n";
       pthread_mutex_lock(&lock_p[pessoa.getId()]);
       pessoa.setQuer_usar(false);
-      
+      cout << pessoa.getName() << " esta TENTANDO comer." << "\n";
       int id_casal_junto = id_casal(pessoa.getId());
       pthread_mutex_lock(&lock_primeiro_do_casal[id_casal_junto]);
+      cout << pessoa.getName() << " primeiro do casal ok." << "\n";
       pthread_mutex_lock(&lock_casal_junto[id_casal_junto]);
-
+      cout << pessoa.getName() << " casal junto ok." << "\n";
       if(casal_junto[id_casal_junto] and (primeiro_do_casal[id_casal_junto] == -1)){//se o casal estava junto e agora o segundo do casal esta parando de usar o forno
         casal_junto[id_casal_junto] = false;//não é mais uma situação de casal na fila
       }
@@ -1105,20 +1114,26 @@ class Microwave {
       int pessoas_deadlock[9];
       srand48(time(NULL));
       int nmr_aleatorio;
-
+      cout << "---------------------" << "RAJ esta tentando pegar o lock do pessoal." << "\n";
       pthread_mutex_lock(&lock_p[SHELDON]);
+      cout << "---------------------" << "RAJ pegou o lock do sheldon" << "\n";
       pthread_mutex_lock(&lock_p[HOWARD]);
+      cout << "---------------------" << "RAJ pegou o lock do howard" << "\n";
       pthread_mutex_lock(&lock_p[LEONARD]);
+      cout << "---------------------" << "RAJ pegou o lock do Leonard" << "\n";
       pthread_mutex_lock(&lock_p[BERNADETTE]);
+      cout << "---------------------" << "RAJ pegou o lock da Bernadette" << "\n";
       pthread_mutex_lock(&lock_p[PENNY]);
+      cout << "---------------------" << "RAJ pegou o lock da Penny" << "\n";
       pthread_mutex_lock(&lock_p[AMY]);
-
+      cout << "---------------------" << "RAJ pegou lock do pessoal." << "\n";
       pthread_mutex_lock(&lock_primeiro_do_casal[0]);
       pthread_mutex_lock(&lock_casal_junto[0]);
       pthread_mutex_lock(&lock_primeiro_do_casal[1]);
       pthread_mutex_lock(&lock_casal_junto[1]);
       pthread_mutex_lock(&lock_primeiro_do_casal[2]);
       pthread_mutex_lock(&lock_casal_junto[2]);
+      cout << "---------------------" << "RAJ pegou lock das variáveis auxiliares." << "\n";
 
       if(//se todos os casais estão juntos e ninguém chegou a usar o forno ainda...
         p[SHELDON].getQuer_usar() and p[AMY].getQuer_usar() and p[HOWARD].getQuer_usar() and p[BERNADETTE].getQuer_usar() and p[LEONARD].getQuer_usar() and p[PENNY].getQuer_usar()
@@ -1251,6 +1266,7 @@ class Microwave {
       pthread_mutex_unlock(&lock_p[BERNADETTE]);
       pthread_mutex_unlock(&lock_p[PENNY]);
       pthread_mutex_unlock(&lock_p[AMY]);
+      cout << "---------------------" << "RAJ deu unlock em tudo." << "\n";
     }
 };
 

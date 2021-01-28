@@ -8,7 +8,7 @@
 #include <string.h>
 #include <unistd.h>
 
- #define NTHREADS 7
+ #define NTHREADS 8
 
  #define SHELDON 0
  #define HOWARD 1
