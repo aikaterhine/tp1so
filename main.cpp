@@ -1160,10 +1160,6 @@ class Microwave {
     }
 
     void release(Person &pessoa){
-      pthread_mutex_lock(&lock_cout);
-      cout << pessoa.getName() << " vai comer." << "\n";
-      pthread_mutex_unlock(&lock_cout);
-
       //destranca o forno
       pthread_mutex_unlock(&lock_forno);
 
@@ -1186,6 +1182,10 @@ class Microwave {
 
       pthread_mutex_unlock(&lock_casal_junto[id_casal_junto]);   
       pthread_mutex_unlock(&lock_primeiro_do_casal[id_casal_junto]);
+
+      pthread_mutex_lock(&lock_cout);
+      cout << pessoa.getName() << " vai comer." << "\n";
+      pthread_mutex_unlock(&lock_cout);
 
       //faço broadcast da variavel de todos(exceto kripke), para o caso de ser a vez do meu casal e de ele estar esperando alguém além da pessoa executando esta função
       pthread_cond_broadcast(&cond_p[SHELDON]);
