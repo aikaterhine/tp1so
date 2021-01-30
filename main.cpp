@@ -267,15 +267,18 @@ void trata_prioridades(Person pessoa){
     
     int casal_prior = casais(prior);
 
+    cout << "------------------------------------" << pessoa.getName() << " : Tentando pegar o lock do casal_junto" << "\n";
     pthread_mutex_lock(&lock_casal_junto[id_casal_pessoa]);
     if(p[casal].getQuer_usar()){
       casal_junto[id_casal_pessoa] = true;
     }
     else
-      casal_junto[id_casal_pessoa] = false;                   
+      casal_junto[id_casal_pessoa] = false;         
+    cout << "------------------------------------" << pessoa.getName() << " : Consegui o lock do casal_junto" << "\n";          
     pthread_mutex_unlock(&lock_casal_junto[id_casal_pessoa]);
     //a partir daqui começa a espera desta pessoa, caso seja necessário esperar
     while(1){
+      cout << "------------------------------------ " << pessoa.getName() << ": AINDA NAO ACHOU ALGUEM PARA ESPERAR " << "\n";
       if(p[pessoa_dependente].getQuer_usar() and p[casal_pessoa_dependente].getQuer_usar() and !p[casal].getQuer_usar()){//se eu não tiver casal e o casal que depende de mim estiver na fila, esperar eles
         while(p[pessoa_dependente].getQuer_usar() and !p[casal].getQuer_usar()){//espero a pessoa que depende de mim
           //se o raj liberou, ignore o while
@@ -330,7 +333,7 @@ void trata_prioridades(Person pessoa){
             pthread_mutex_unlock(&lock_p[PENNY]);
           if((idPessoa != AMY) and (pessoa_dependente != AMY))
             pthread_mutex_unlock(&lock_p[AMY]);
-          //cout << "------------------------------------ " << pessoa.getName() << ": Esperando " << p[pessoa_dependente].getName() << "\n";
+          cout << "------------------------------------ " << pessoa.getName() << ": Esperando " << p[pessoa_dependente].getName() << "\n";
           pthread_cond_wait(&cond_p[pessoa_dependente], &lock_p[pessoa_dependente]);
           pthread_mutex_unlock(&lock_p[pessoa_dependente]);
 
@@ -868,20 +871,22 @@ void trata_prioridades(Person pessoa){
   }
   else
   if((prior == STUART) or (prior == KRIPKE)){
+    
+    cout << "------------------------------------ " << pessoa.getName() << ": Vai tentar pegar os locks" << "\n";
+    pthread_mutex_lock(&lock_p[SHELDON]);
+    cout << "------------------------------------ " << pessoa.getName() << ": Pegou o lock do sheldon" << "\n";
+    pthread_mutex_lock(&lock_p[HOWARD]);
+    cout << "------------------------------------ " << pessoa.getName() << ": Pegou o lock do howard" << "\n";
+    pthread_mutex_lock(&lock_p[LEONARD]);
+    cout << "------------------------------------ " << pessoa.getName() << ": Pegou o lock do leonard" << "\n";
+    pthread_mutex_lock(&lock_p[BERNADETTE]);
+    cout << "------------------------------------ " << pessoa.getName() << ": Pegou o lock da Bernadette" << "\n";
+    pthread_mutex_lock(&lock_p[PENNY]);
+    cout << "------------------------------------ " << pessoa.getName() << ": Pegou o lock da Penny" << "\n";
+    pthread_mutex_lock(&lock_p[AMY]);
+    cout << "------------------------------------ " << pessoa.getName() << ": Conseguiu os locks " << "\n";
     while(1){
-      cout << "------------------------------------ " << pessoa.getName() << ": Vai tentar pegar os locks" << "\n";
-      pthread_mutex_lock(&lock_p[SHELDON]);
-      cout << "------------------------------------ " << pessoa.getName() << ": Pegou o lock do sheldon" << "\n";
-      pthread_mutex_lock(&lock_p[HOWARD]);
-      cout << "------------------------------------ " << pessoa.getName() << ": Pegou o lock do howard" << "\n";
-      pthread_mutex_lock(&lock_p[LEONARD]);
-      cout << "------------------------------------ " << pessoa.getName() << ": Pegou o lock do leonard" << "\n";
-      pthread_mutex_lock(&lock_p[BERNADETTE]);
-      cout << "------------------------------------ " << pessoa.getName() << ": Pegou o lock da Bernadette" << "\n";
-      pthread_mutex_lock(&lock_p[PENNY]);
-      cout << "------------------------------------ " << pessoa.getName() << ": Pegou o lock da Penny" << "\n";
-      pthread_mutex_lock(&lock_p[AMY]);
-      cout << "------------------------------------ " << pessoa.getName() << ": Conseguiu os locks " << "\n";
+      cout << "------------------------------------ " << pessoa.getName() << ": AINDA NAO ACHOU ALGUEM PARA ESPERAR " << "\n";
       if(prior == KRIPKE){
         pthread_mutex_lock(&lock_p[STUART]);
         while(p[STUART].getQuer_usar()){
@@ -1078,10 +1083,17 @@ class Microwave {
     }
 
     void release(Person &pessoa){
-      cout << pessoa.getName() << " vai TENTAR comer." << "\n";
+      pthread_mutex_lock(&lock_cout);
+      cout << pessoa.getName() << " vai comer." << "\n";
+      pthread_mutex_unlock(&lock_cout);
+
+      //destranca o forno
+      pthread_mutex_unlock(&lock_forno);
+
+      cout << "----------------------" << pessoa.getName() << " vai TENTAR mudar sua variavel e dar broadcast." << "\n";
       pthread_mutex_lock(&lock_p[pessoa.getId()]);
       pessoa.setQuer_usar(false);
-      cout << pessoa.getName() << " esta TENTANDO comer." << "\n";
+      cout << "----------------------" << pessoa.getName() << " MUDOU sua variavel, mas ainda FALTA broadcast" << "\n";
       int id_casal_junto = id_casal(pessoa.getId());
       pthread_mutex_lock(&lock_primeiro_do_casal[id_casal_junto]);
       cout << pessoa.getName() << " primeiro do casal ok." << "\n";
@@ -1093,19 +1105,13 @@ class Microwave {
       else
       if(primeiro_do_casal[id_casal_junto] != -1)
         primeiro_do_casal[id_casal_junto] = -1;
-        
+
       pthread_mutex_unlock(&lock_casal_junto[id_casal_junto]);   
       pthread_mutex_unlock(&lock_primeiro_do_casal[id_casal_junto]);
 
       pthread_cond_broadcast(&cond_p[pessoa.getId()]);
       pthread_mutex_unlock(&lock_p[pessoa.getId()]);
-
-      pthread_mutex_lock(&lock_cout);
-      cout << pessoa.getName() << " vai comer." << "\n";
-      pthread_mutex_unlock(&lock_cout);
-
-      //destranca o forno
-      pthread_mutex_unlock(&lock_forno);
+      cout << "----------------------" << pessoa.getName() << " MUDOU sua variavel E DEU broadcast" << "\n";
     }
 
     void check(){
