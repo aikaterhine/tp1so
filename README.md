@@ -1,12 +1,8 @@
 # tp1so
 
-para rodar o codigo no terminal:
+## Execução do Trabalho Prático
 
-g++ -o main src/Person.cpp src/main.cpp -pthread
-./main 10
-
-para rodar usando o makefile:
-1. make clean
-2. make 
-3. make run
-
+Para simular a utilização do forno pelos personagens de The Big Bang Theory a partir do código implementado, utilize:
+  ### make clean
+  ### make run
+  ### ./main [número de repetições]                     (e.g: ./main 10)
