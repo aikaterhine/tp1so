@@ -1351,11 +1351,6 @@ void* execute_threads(void* thread) {
         pthread_mutex_lock(&lock_thrds_terminated);
         thrds_terminated++;
         pthread_mutex_unlock(&lock_thrds_terminated);
-
-        pthread_mutex_lock(&lock_cout);
-        cout << "-------------------------------------- ";
-        cout << p[my_thread].getName() << ": Terminou suas tarefas." << "\n";
-        pthread_mutex_unlock(&lock_cout);
         return NULL;
       }
     }
@@ -1367,10 +1362,6 @@ void* execute_threads(void* thread) {
 
       pthread_mutex_lock(&lock_thrds_terminated);
       if(thrds_terminated == NTHREADS - 1){
-        pthread_mutex_lock(&lock_cout);
-        cout << "-------------------------------------- ";
-        cout << p[my_thread].getName() << ": Terminou suas tarefas." << "\n";
-        pthread_mutex_unlock(&lock_cout);
         return NULL;
       }
       pthread_mutex_unlock(&lock_thrds_terminated);
